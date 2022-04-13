@@ -1,5 +1,12 @@
+# standard modules
 import os  # for path management
 import json  # json file loading
+
+# dependency modules
+import nibabel
+import numpy as np
+
+# local modules
 
 
 ########################################################################################################################
@@ -74,7 +81,7 @@ class Volume:
         self.__class__.instances.append(self)
 
     # ------------------------------------------------------------------------------------------------------------------
-    def load_json(self):
+    def load_json(self) -> None:
         with open(self.json.path, "r") as file:
             content = file.read()
             clean = content.replace(r'\\', r'_')  # in ~2021, dcm2iix escaping character changed from _ to \\
@@ -102,3 +109,24 @@ class Volume:
         else:
             self.bvec = Bvec(bvec_file)
             return True
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def load_header(self) -> None:
+
+        # load header
+        nii = nibabel.load(self.nii.path)
+
+        # fetch raw parmeters
+        matrix = nii.header.get_data_shape()
+        resolution = nii.header.get_zooms()
+        fov = [ mx*res for mx,res in zip(matrix, resolution)]
+
+        # format parameters
+        matrix = list(matrix)
+        resolution = np.round(resolution, 3)
+        fov = [int(x) for x in fov]
+
+        # save parameters
+        self.seqparam['Matrix'    ] = matrix
+        self.seqparam['Resolution'] = resolution
+        self.seqparam['FoV'       ] = fov

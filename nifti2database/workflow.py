@@ -48,6 +48,12 @@ def run(args: argparse.Namespace) -> None:
     # read all json files
     utils.read_all_json(volume_list)
 
+    # read all nifti headers
+    utils.read_all_nifti_header(volume_list)
+
+    df = utils.assemble_list_param_to_dataframe(volume_list)
+    print(df)
+
     stop_time = time.time()
 
     log.info(f'Total execution time is : {stop_time-star_time:.3f}s')

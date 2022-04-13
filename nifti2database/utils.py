@@ -12,9 +12,9 @@ import traceback                # to get the current function name
 import inspect                  # to get the current module name
 
 # dependency modules
+import pandas
 
 # local modules
-from nifti2database import metadata
 from nifti2database.classes import Volume
 
 
@@ -162,3 +162,20 @@ def read_all_json(volume_list: list[Volume]) -> None:
     for volume in volume_list:
         volume.load_json()
 
+
+########################################################################################################################
+@logit('Read nifti files header to store parameters that are not in the json', logging.INFO)
+def read_all_nifti_header(volume_list: list[Volume]) -> None:
+
+    for volume in volume_list:
+        volume.load_header()
+
+
+########################################################################################################################
+def assemble_list_param_to_dataframe(volume_list: list[Volume]) -> pandas.DataFrame:
+
+    list_param = []
+    for volume in volume_list:
+        list_param.append(volume.seqparam)
+
+    return pandas.DataFrame(list_param)
