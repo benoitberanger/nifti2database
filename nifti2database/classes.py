@@ -116,7 +116,7 @@ class Volume:
         # load header
         nii = nibabel.load(self.nii.path)
 
-        # fetch raw parmeters
+        # fetch raw parameters
         matrix = nii.header.get_data_shape()
         resolution = nii.header.get_zooms()
         fov = [ mx*res for mx,res in zip(matrix, resolution)]

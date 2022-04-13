@@ -13,7 +13,7 @@ setuptools.setup(
     author='Benoit Beranger',
     author_email='benoit.beranger@icm-institute.org',
     url='https://github.com/benoitberanger/nifti2database.git',
-    description='Automatic BIDS architecture',
+    description='nifti2database',
     long_description=long_description,
     long_description_content_type="text/markdown",
     license='GPL3',
