@@ -15,6 +15,8 @@ def format_args(args: argparse.Namespace) -> argparse.Namespace:
     # in
     if isinstance(args.in_dir, str): # force single str to be list, for easier management
         args.in_dir = [args.in_dir]
+    if isinstance(args.in_dir, list) and len(args.in_dir)==1 and isinstance(args.in_dir[0], list): # usually from debugging, when using a script
+        args.in_dir = args.in_dir[0]
     args.in_dir = [os.path.abspath(one_dir) for one_dir in args.in_dir]
 
     # out
