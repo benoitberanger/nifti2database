@@ -10,6 +10,7 @@ import time                     # to time execution of code
 from functools import wraps     # for decorator
 import traceback                # to get the current function name
 import inspect                  # to get the current module name
+import runpy                    # to run config script
 
 # dependency modules
 import pandas
@@ -86,6 +87,28 @@ def logit(message, level=logging.INFO):
         return wrapper
 
     return log_time
+
+
+########################################################################################################################
+def load_config_file(config_file: str) -> list:
+    log = get_logger()
+
+    if os.path.exists(config_file):
+        if os.path.isfile(config_file):
+            script_content = runpy.run_path(config_file)
+            if "config" in script_content:
+                config = script_content['config']
+                log.info(f"using config_file : {config_file}")
+                return config
+            else:
+                log.critical(f"config_file incorrect (no 'config' variable inside) : {config_file}")
+                sys.exit(1)
+        else:
+            log.critical(f"config_file is not a file : {config_file}")
+            sys.exit(1)
+    else:
+        log.critical(f"config_file does not exist : {config_file}")
+        sys.exit(1)
 
 
 ########################################################################################################################

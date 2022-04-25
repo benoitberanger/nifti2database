@@ -9,6 +9,7 @@ import time      # to time execution of code
 # local modules
 from nifti2database import utils, metadata
 from nifti2database.utils import get_logger
+import nifti2database.decision_tree.siemens
 
 
 ########################################################################################################################
@@ -33,6 +34,9 @@ def run(args: argparse.Namespace) -> None:
             log.error(f"in_dir does not exist : {one_dir}")
             sys.exit(1)
 
+    # load config file
+    config = utils.load_config_file(args.config_file)
+
     # read all dirs and establish file list
     file_list = utils.fetch_all_files(args.in_dir)
 
@@ -52,7 +56,10 @@ def run(args: argparse.Namespace) -> None:
     utils.read_all_nifti_header(volume_list)
 
     df = utils.assemble_list_param_to_dataframe(volume_list)
-    print(df)
+
+    # apply decision tree
+    # !! here, only Siemens is implemented !!
+    nifti2database.decision_tree.siemens.run(volume_list, config)
 
     stop_time = time.time()
 

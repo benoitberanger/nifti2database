@@ -69,6 +69,16 @@ def get_parser() -> argparse.ArgumentParser:
                           action="store_false")
     optional.set_defaults(logfile=False)
 
+    optional.add_argument("-c", "--config_file",
+                          help=(
+                              "If you want to use non-coded sequences such as new Products, WIP or C2P,\n"
+                              "you can provide a config file.\n"
+                              "Default file is located in [nifti2database]/config_file/siemens.py"
+                          ),
+                          dest="config_file",
+                          metavar='FILE',
+                          default=os.path.join( os.path.dirname(nifti2database.__path__[0]), 'config_file', 'siemens.py'))
+
     optional.add_argument("-v", "--version",
                           action="version",
                           version=nifti2database_version)
