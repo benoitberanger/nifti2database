@@ -1,5 +1,4 @@
 # standard modules
-from typing import List  # for function signature
 
 # dependency modules
 import pandas   # for DataFrame
@@ -556,7 +555,7 @@ def prog_DISCARD(seqinfo: pandas.DataFrame, sub_name: str) -> None:
             vol.sub                = sub_name
             vol.bidsfields['acq']  = acq
             vol.bidsfields['run']  = run_idx
-            vol.reason_not_ready  = f'discard PulseSequenceDetails = {first_serie["PulseSequenceDetails"]}'
+            vol.reason_not_ready  = f'discard PulseSequenceName = {first_serie["PulseSequenceName"]}'
 
 
 ########################################################################################################################
@@ -579,11 +578,11 @@ def prog_UNKNOWN(df: pandas.DataFrame) -> None:
                     vol.sub               = utils.clean_name(seq['PatientName'])
                     vol.bidsfields['acq'] = utils.clean_name(seq['ProtocolName'])
                     vol.bidsfields['run'] = run_idx
-                    vol.reason_not_ready  = f"unknown PulseSequenceDetails = {seq['PulseSequenceDetails']}"
+                    vol.reason_not_ready  = f"unknown PulseSequenceName = {seq['PulseSequenceName']}"
 
 
 ########################################################################################################################
-def run(volume_list: List[Volume], config: list) -> None:
+def run(volume_list: list[Volume], config: list) -> None:
 
     log = get_logger()
 
@@ -608,14 +607,13 @@ def run(volume_list: List[Volume], config: list) -> None:
     # make some extraction / conversion
 
     # %CustomerSeq%_cmrr_mbep2d_bold -> cmrr_mbep2d_bold
-    df['PulseSequenceDetails'] = df['PulseSequenceDetails'].apply(lambda s: s.rsplit("%_")[1])
+    df['PulseSequenceName'] = df['PulseSequenceDetails'].apply(lambda s: s.rsplit("%_")[1])
 
     # [ORIGINAL, PRIMARY, M, ND, MOSAIC] -> ORIGINAL_PRIMARY_M_ND_MOSAIC
     df['ImageTypeStr'] = df['ImageType'].apply(lambda s: '_'.join(s))
 
     # subject by subject group of sequences
-    # this is mandatory, otherwise you would mix run numbers when series have same SeriesDescription,
-    # which is usual in a cohort
+    # this is mandatory, otherwise we would mix sequences
     df_by_subject = df.groupby('PatientName')
 
     # call each routine depending on the sequence name
@@ -624,7 +622,7 @@ def run(volume_list: List[Volume], config: list) -> None:
         for seq_regex, fcn_name in config:      # loop over sequence decision tree
 
             # get list of corresponding sequence
-            seqinfo = utils.slice_with_genericfield(df_subject, 'PulseSequenceDetails', seq_regex)
+            seqinfo = utils.slice_with_genericfield(df_subject, 'PulseSequenceName', seq_regex)
             if seqinfo.empty: continue          # just to run the code faster
 
             func = eval(fcn_name)               # fetch the name of the prog_ to call dynamically

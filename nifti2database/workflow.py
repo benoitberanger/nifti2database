@@ -55,8 +55,6 @@ def run(args: argparse.Namespace) -> None:
     # read all nifti headers
     utils.read_all_nifti_header(volume_list)
 
-    df = utils.assemble_list_param_to_dataframe(volume_list)
-
     # apply decision tree
     # !! here, only Siemens is implemented !!
     nifti2database.decision_tree.siemens.run(volume_list, config)

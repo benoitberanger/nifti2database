@@ -1,7 +1,6 @@
 # standard modules
 import sys               # to stop script execution on case of error
 import re                # regular expressions
-from typing import List  # for function signature
 
 # dependency modules
 import pandas   # for DataFrame
@@ -12,7 +11,7 @@ from nifti2database.utils import get_logger
 
 
 ########################################################################################################################
-def assemble_list_param(volume_list: List[Volume]) -> List[dict]:
+def assemble_list_param(volume_list: list[Volume]) -> list[dict]:
 
     list_param = []
     for volume in volume_list:
