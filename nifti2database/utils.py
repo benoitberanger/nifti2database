@@ -1,9 +1,12 @@
 # standard modules
+import warnings
 
 # dependency modules
+import niix2bids
 from niix2bids.classes import Volume
 import nibabel
 import numpy as np
+import pandas
 
 # local modules
 
@@ -35,6 +38,70 @@ def read_all_nifti_header(volume_list: list[Volume]) -> None:
 def concat_bidsfields_to_seqparam(volume_list: list[Volume]) -> None:
     for vol in volume_list:
         vol.seqparam.update( vol.bidsfields )
+        vol.seqparam['tag'   ] = vol.tag
+        vol.seqparam['suffix'] = vol.suffix
+        vol.seqparam['sub'   ] = vol.sub
 
 
 ########################################################################################################################
+def build_scan_from_series(volume_list: list[Volume], config: list) -> list[dict]:
+
+    log = niix2bids.utils.get_logger()
+    log.info(f'starting decision tree...')
+
+    # extract volume_list.seqparam into a DataFrame, for easy grouping
+    list_seqparam = [vol.seqparam for vol in volume_list]
+    df = pandas.DataFrame(list_seqparam)
+
+    # %CustomerSeq%_cmrr_mbep2d_bold -> cmrr_mbep2d_bold
+    df['PulseSequenceName'] = df['PulseSequenceDetails'].apply(lambda s: s.rsplit("%_")[1])
+
+    scans = []
+
+    # call each routine depending on the sequence name
+    for seq_regex, fcn_name in config:  # loop over sequence decision tree
+
+        # get list of corresponding sequence
+        seqinfo = niix2bids.decision_tree.utils.slice_with_genericfield(df, 'PulseSequenceName', seq_regex)
+        if seqinfo.empty: continue  # just to run the code faster
+
+        columns = ['PatientName', 'ProtocolName', 'run']
+        groups = seqinfo.groupby(columns)
+
+        for _, series in groups:
+            scan = series.to_dict('list')
+            to_delete = []
+            for key in scan.keys():
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('ignore',r"Creating an ndarray from ragged nested sequences")
+                    scan[key] = np.unique( scan[key] )
+
+                if type(scan[key]) is np.ndarray and len(scan[key]) is 1:
+                    scan[key] = scan[key][0]
+                    if type(scan[key]) == np.float64 and np.isnan(scan[key]):
+                        to_delete.append(key)
+                    # if type(scan[key][0]) is np.str_ :
+                    #     scan[key] = str(scan[key][0])
+                    # # elif len(scan[key])>1:
+                    # #     pass
+                    #     # scan[key]
+                    # elif np.isnan(scan[key][0]):
+                    #     to_delete.append(key)
+
+                # elif len(scan[key]) == 1:
+                #     scan[key] = scan[key][0]
+
+                    # if isinstance(type(scan[key]), type(np.array)) and scan[key].ndim == 0:
+                    #     to_delete.append(key)
+                else:
+                    scan[key] = scan[key].tolist()
+
+        for key in to_delete:
+            del scan[key]
+
+        scans.append(scan)
+
+    return scans
+
+
+    log.info(f'...decision tree done')

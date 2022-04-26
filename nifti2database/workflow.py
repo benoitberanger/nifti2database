@@ -68,7 +68,7 @@ def run(args: argparse.Namespace) -> None:
     nifti2database.utils.concat_bidsfields_to_seqparam(volume_list)
 
     # ok here is the most important part : regroup volumes by scan
-    nifti2database.decision_tree.run(volume_list, config)
+    scans = nifti2database.utils.build_scan_from_series(volume_list, config)
 
     stop_time = time.time()
 
