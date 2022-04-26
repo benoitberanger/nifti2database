@@ -67,6 +67,9 @@ def run(args: argparse.Namespace) -> None:
     # conctenate the bidsfields with the jsondict (seqparam)
     nifti2database.utils.concat_bidsfields_to_seqparam(volume_list)
 
+    # ok here is the most important part : regroup volumes by scan
+    nifti2database.decision_tree.run(volume_list, config)
+
     stop_time = time.time()
 
     log.info(f'Total execution time is : {stop_time-star_time:.3f}s')
