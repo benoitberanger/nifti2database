@@ -5,21 +5,23 @@ import sys       # to stop script execution on case of error
 import time      # to time execution of code
 
 # dependency modules
+import niix2bids.utils
 
 # local modules
 from nifti2database import utils, metadata
-from nifti2database.utils import get_logger
-import nifti2database.decision_tree.siemens
 
 
 ########################################################################################################################
 def run(args: argparse.Namespace) -> None:
 
+    #-------------------------------------------------------------------------------------------------------------------
+    # from here, this a basicly a copy-paste of niix2bids.workflow.run()
+
     star_time = time.time()
 
     # initialize logger (console & file)
-    utils.init_logger(args.out_dir, args.logfile)
-    log = get_logger()
+    niix2bids.utils.init_logger(args.out_dir, args.logfile)
+    log = niix2bids.utils.get_logger()
     log.info(f"nifti2database=={metadata.get_nifti2database_version()}")
 
     # logs
@@ -35,29 +37,34 @@ def run(args: argparse.Namespace) -> None:
             sys.exit(1)
 
     # load config file
-    config = utils.load_config_file(args.config_file)
+    config = niix2bids.utils.load_config_file(args.config_file)
 
     # read all dirs and establish file list
-    file_list = utils.fetch_all_files(args.in_dir)
+    file_list = niix2bids.utils.fetch_all_files(args.in_dir)
 
     # isolate .nii files
-    file_list_nii = utils.isolate_nii_files(file_list)
+    file_list_nii = niix2bids.utils.isolate_nii_files(file_list)
 
     # check if all .nii files have their own .json
-    file_list_nii, file_list_json = utils.check_if_json_exists(file_list_nii)
+    file_list_nii, file_list_json = niix2bids.utils.check_if_json_exists(file_list_nii)
 
     # create Volume objects
-    volume_list = utils.create_volume_list(file_list_nii)
+    volume_list = niix2bids.utils.create_volume_list(file_list_nii)
 
     # read all json files
-    utils.read_all_json(volume_list)
-
-    # read all nifti headers
-    utils.read_all_nifti_header(volume_list)
+    niix2bids.utils.read_all_json(volume_list)
 
     # apply decision tree
     # !! here, only Siemens is implemented !!
-    nifti2database.decision_tree.siemens.run(volume_list, config)
+    niix2bids.decision_tree.siemens.run(volume_list, config)
+
+    # to here
+    #-------------------------------------------------------------------------------------------------------------------
+
+    return sys.exit(0)
+
+    # read all nifti headers
+    niix2bids.utils.read_all_nifti_header(volume_list)
 
     stop_time = time.time()
 

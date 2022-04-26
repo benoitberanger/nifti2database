@@ -3,6 +3,7 @@ import argparse  # parser of the CLI
 import os        # for path management
 
 # dependency modules
+import niix2bids
 
 # local modules
 import nifti2database
@@ -73,11 +74,11 @@ def get_parser() -> argparse.ArgumentParser:
                           help=(
                               "If you want to use non-coded sequences such as new Products, WIP or C2P,\n"
                               "you can provide a config file.\n"
-                              "Default file is located in [nifti2database]/config_file/siemens.py"
+                              "Default file is located in [niix2bids]/config_file/siemens.py"
                           ),
                           dest="config_file",
                           metavar='FILE',
-                          default=os.path.join( os.path.dirname(nifti2database.__path__[0]), 'config_file', 'siemens.py'))
+                          default=os.path.join( niix2bids.__path__[0], 'config_file', 'siemens.py'))
 
     optional.add_argument("-v", "--version",
                           action="version",

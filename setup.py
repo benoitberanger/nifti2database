@@ -22,7 +22,7 @@ setuptools.setup(
     install_requires=[
         "pandas",     # for DataFrame
         "nibabel",    # to load nifti headers
-        "niix2bids @ git+ssh://git@github.com/benoitberanger/niix2bids.git",  # this a the base workflow
+        "niix2bids @ git+https://github.com/benoitberanger/niix2bids.git",  # this a the base workflow
     ],
     entry_points={
         'console_scripts': [
