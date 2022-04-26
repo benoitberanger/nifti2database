@@ -8,7 +8,7 @@ import time      # to time execution of code
 import niix2bids.utils
 
 # local modules
-from nifti2database import utils, metadata
+import nifti2database
 
 
 ########################################################################################################################
@@ -22,7 +22,7 @@ def run(args: argparse.Namespace) -> None:
     # initialize logger (console & file)
     niix2bids.utils.init_logger(args.out_dir, args.logfile)
     log = niix2bids.utils.get_logger()
-    log.info(f"nifti2database=={metadata.get_nifti2database_version()}")
+    log.info(f"nifti2database=={nifti2database.metadata.get_nifti2database_version()}")
 
     # logs
     log.info(f"in_dir  : {args.in_dir}")
@@ -61,10 +61,11 @@ def run(args: argparse.Namespace) -> None:
     # to here
     #-------------------------------------------------------------------------------------------------------------------
 
-    return sys.exit(0)
-
     # read all nifti headers
-    niix2bids.utils.read_all_nifti_header(volume_list)
+    nifti2database.utils.read_all_nifti_header(volume_list)
+
+    # conctenate the bidsfields with the jsondict (seqparam)
+    nifti2database.utils.concat_bidsfields_to_seqparam(volume_list)
 
     stop_time = time.time()
 
