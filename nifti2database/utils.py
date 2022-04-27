@@ -55,9 +55,9 @@ def display_logs_from_decision_tree(volume_list: list[Volume]) -> None:
 @logit("Reading all nifti headers to extract info absent from the JSON. This may take a while... ",level=logging.INFO)
 def read_all_nifti_header(df: pandas.DataFrame) -> pandas.DataFrame:
 
-    Matrix = []
+    Matrix     = []
     Resolution = []
-    FoV = []
+    FoV        = []
 
     for row in df.index:
 
@@ -77,10 +77,26 @@ def read_all_nifti_header(df: pandas.DataFrame) -> pandas.DataFrame:
         resolution = np.round(resolution, 3).astype(float).tolist()
         fov = [int(x) for x in fov]
 
-        # # this is nuts : i cannot set a specific row & columen with a list
-        # df.loc[ row,'Matrix'     ] = matrix
-        # df.loc[ row,'Resolution' ] = resolution
-        # df.loc[ row,'FoV'        ] = fov
+        # # this is nuts : i cannot assign a 'list' to a specific row & column
+        # df.loc[row,'Matrix'     ] = matrix
+        # df.loc[row,'Resolution' ] = resolution
+        # df.loc[row,'FoV'        ] = fov
+
+        df.loc[row,'Mx'] = matrix[0]
+        df.loc[row,'My'] = matrix[1]
+        df.loc[row,'Mz'] = matrix[2]
+        if len(matrix) == 4:
+            df.loc[row,'Mt'] = resolution[3]
+        df.loc[row,'Rx'] = resolution[0]
+        df.loc[row,'Ry'] = resolution[1]
+        df.loc[row,'Rz'] = resolution[2]
+        if len(resolution) == 4:
+            df.loc[row,'Rt'] = resolution[3]
+        df.loc[row,'Fx'] = fov[0]
+        df.loc[row,'Fy'] = fov[1]
+        df.loc[row,'Fz'] = fov[2]
+        if len(fov) == 4:
+            df.loc[row,'Ft'] = fov[3]
 
         Matrix.append(matrix)
         Resolution.append(resolution)
@@ -95,6 +111,7 @@ def read_all_nifti_header(df: pandas.DataFrame) -> pandas.DataFrame:
 
 ########################################################################################################################
 def concat_bidsfields_to_seqparam(df: pandas.DataFrame) -> pandas.DataFrame:
+    
     for row in df.index:
 
         # shortcut
@@ -132,7 +149,6 @@ def build_scan_from_series(df: pandas.DataFrame, config: list) -> list[dict]:
 
             scan = series.to_dict('list') # convert the DataFrame to standard dict
 
-            nRow = series.shape[0]
             to_delete = []
 
             for key in scan.keys():
@@ -141,18 +157,14 @@ def build_scan_from_series(df: pandas.DataFrame, config: list) -> list[dict]:
                     unique_stuff = series[key].unique()
                     if len(unique_stuff) == 1:
                         scan[key] = unique_stuff[0]
-                    else:
-                        pass
 
                 except TypeError:  # unique() on 'list' is not possible, but it is on 'tuple'
                     unique_stuff = series[key].transform(tuple).unique()
                     if len(unique_stuff) == 1:
                         scan[key] = unique_stuff[0]
-                    else:
-                        pass
 
                 # remove nan
-                if type(scan[key]) is np.float64 or type(scan[key]) is float and np.isnan(scan[key]):
+                if (type(scan[key]) is np.float64 or type(scan[key]) is float) and np.isnan(scan[key]):
                     to_delete.append(key)
 
             for key in to_delete:  # remove keys with juste a s 1x1 nan
