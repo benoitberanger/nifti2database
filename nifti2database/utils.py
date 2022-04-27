@@ -53,9 +53,17 @@ def display_logs_from_decision_tree(volume_list: list[Volume]) -> None:
 
 ########################################################################################################################
 @logit("Reading all nifti headers to extract info absent from the JSON. This may take a while... ",level=logging.INFO)
-def read_all_nifti_header(volume_list: list[Volume]) -> None:
-    for vol in volume_list:
-        
+def read_all_nifti_header(df: pandas.DataFrame) -> pandas.DataFrame:
+
+    Matrix = []
+    Resolution = []
+    FoV = []
+
+    for row in df.index:
+
+        # shortcut
+        vol = df.loc[row,'Volume']
+
         # load header
         nii = nibabel.load(vol.nii.path)
 
@@ -69,33 +77,43 @@ def read_all_nifti_header(volume_list: list[Volume]) -> None:
         resolution = np.round(resolution, 3).astype(float).tolist()
         fov = [int(x) for x in fov]
 
-        # save parameters
-        vol.seqparam['Matrix'    ] = matrix
-        vol.seqparam['Resolution'] = resolution
-        vol.seqparam['FoV'       ] = fov
+        # # this is nuts : i cannot set a specific row & columen with a list
+        # df.loc[ row,'Matrix'     ] = matrix
+        # df.loc[ row,'Resolution' ] = resolution
+        # df.loc[ row,'FoV'        ] = fov
+
+        Matrix.append(matrix)
+        Resolution.append(resolution)
+        FoV.append(fov)
+
+    df['Matrix'    ] = Matrix
+    df['Resolution'] = Resolution
+    df['FoV'       ] = FoV
+
+    return df
 
 
 ########################################################################################################################
-def concat_bidsfields_to_seqparam(volume_list: list[Volume]) -> None:
-    for vol in volume_list:
-        vol.seqparam.update( vol.bidsfields )
-        vol.seqparam['tag'   ] = vol.tag
-        vol.seqparam['suffix'] = vol.suffix
-        vol.seqparam['sub'   ] = vol.sub
+def concat_bidsfields_to_seqparam(df: pandas.DataFrame) -> pandas.DataFrame:
+    for row in df.index:
+
+        # shortcut
+        vol = df.loc[row,'Volume']
+
+        for key in vol.bidsfields:
+            df.loc[row,key] = vol.bidsfields[key]
+        df.loc[row,'tag'   ] = vol.tag
+        df.loc[row,'suffix'] = vol.suffix
+        df.loc[row,'sub'   ] = vol.sub
+        
+    return df
 
 
 ########################################################################################################################
-def build_scan_from_series(volume_list: list[Volume], config: list) -> list[dict]:
+def build_scan_from_series(df: pandas.DataFrame, config: list) -> list[dict]:
 
     log = niix2bids.utils.get_logger()
     log.info(f'starting decision tree...')
-
-    # extract volume_list.seqparam into a DataFrame, for easy grouping
-    list_seqparam = [vol.seqparam for vol in volume_list]
-    df = pandas.DataFrame(list_seqparam)
-
-    # %CustomerSeq%_cmrr_mbep2d_bold -> cmrr_mbep2d_bold
-    df['PulseSequenceName'] = df['PulseSequenceDetails'].apply(lambda s: s.rsplit("%_")[1])
 
     scans = []  # list[dict]
 
