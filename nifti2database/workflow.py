@@ -61,6 +61,9 @@ def run(args: argparse.Namespace) -> None:
     # to here
     #-------------------------------------------------------------------------------------------------------------------
 
+    # logs from niix2bids.utils.apply_bids_architecture
+    nifti2database.utils.display_logs_from_decision_tree(volume_list)
+    
     # read all nifti headers
     nifti2database.utils.read_all_nifti_header(volume_list)
 

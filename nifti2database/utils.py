@@ -1,17 +1,58 @@
 # standard modules
+import logging
 import warnings
 
 # dependency modules
 import niix2bids
 from niix2bids.classes import Volume
+from niix2bids.utils import logit
 import nibabel
 import numpy as np
 import pandas
 
 # local modules
 
+########################################################################################################################
+def display_logs_from_decision_tree(volume_list: list[Volume]) -> None:
+
+    log                       = niix2bids.utils.get_logger()
+    log_info                  = []
+    log_info_discard          = []
+    log_warning               = []
+    log_warning_unknown       = []
+    log_error_not_interpreted = []
+
+    for vol in volume_list:
+
+        if len(vol.tag) > 0:  # only process correctly parsed volumes
+
+            if vol.tag == 'DISCARD':
+                log_info_discard.append(f'{vol.reason_not_ready} : {vol.nii.path}')
+
+            elif vol.tag == 'UNKNOWN':
+                log_warning_unknown.append(f'{vol.reason_not_ready} : {vol.nii.path}')
+
+        elif len(vol.reason_not_ready) > 0:
+            log_warning.append(f'{vol.reason_not_ready} : {vol.nii.path}')
+
+        else:
+            log_error_not_interpreted.append(f'file not interpreted : {vol.nii.path}')
+
+    # print them all, but in order
+    for msg in log_error_not_interpreted:
+        log.error(msg)
+    for msg in log_warning_unknown:
+        log.warning(msg)
+    for msg in log_warning:
+        log.warning(msg)
+    # for msg in log_info_discard:
+    #     log.info(msg)
+    for msg in log_info:
+        log.info(msg)
+
 
 ########################################################################################################################
+@logit("Reading all nifti headers to extract info absent from the JSON. This may take a while... ",level=logging.INFO)
 def read_all_nifti_header(volume_list: list[Volume]) -> None:
     for vol in volume_list:
         
@@ -99,6 +140,5 @@ def build_scan_from_series(volume_list: list[Volume], config: list) -> list[dict
             scans.append(scan)
 
     return scans
-
 
     log.info(f'...decision tree done')
