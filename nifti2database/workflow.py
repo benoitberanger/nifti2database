@@ -56,7 +56,6 @@ def run(args: argparse.Namespace) -> None:
 
     # apply decision tree
     # !! here, only Siemens is implemented !!
-    niix2bids.decision_tree.siemens.run(volume_list, config)
     df = niix2bids.decision_tree.siemens.run(volume_list, config)
 
     # to here
@@ -66,16 +65,13 @@ def run(args: argparse.Namespace) -> None:
     nifti2database.utils.display_logs_from_decision_tree(volume_list)
     
     # read all nifti headers
-    nifti2database.utils.read_all_nifti_header(volume_list)
     df = nifti2database.utils.read_all_nifti_header(df)
 
     # conctenate the bidsfields with the jsondict (seqparam)
-    nifti2database.utils.concat_bidsfields_to_seqparam(volume_list)
     df = nifti2database.utils.concat_bidsfields_to_seqparam(df)
 
     # ok here is the most important part : regroup volumes by scan
-    scans = nifti2database.utils.build_scan_from_series(volume_list, config)
-
+    scans = nifti2database.utils.build_scan_from_series(df, config)
     stop_time = time.time()
 
     log.info(f'Total execution time is : {stop_time-star_time:.3f}s')
