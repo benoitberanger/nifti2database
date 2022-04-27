@@ -86,7 +86,7 @@ def read_all_nifti_header(df: pandas.DataFrame) -> pandas.DataFrame:
         df.loc[row,'My'] = matrix[1]
         df.loc[row,'Mz'] = matrix[2]
         if len(matrix) == 4:
-            df.loc[row,'Mt'] = resolution[3]
+            df.loc[row,'Mt'] = matrix[3]
         df.loc[row,'Rx'] = resolution[0]
         df.loc[row,'Ry'] = resolution[1]
         df.loc[row,'Rz'] = resolution[2]
