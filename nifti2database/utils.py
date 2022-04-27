@@ -97,7 +97,7 @@ def build_scan_from_series(volume_list: list[Volume], config: list) -> list[dict
     # %CustomerSeq%_cmrr_mbep2d_bold -> cmrr_mbep2d_bold
     df['PulseSequenceName'] = df['PulseSequenceDetails'].apply(lambda s: s.rsplit("%_")[1])
 
-    scans = []
+    scans = []  # list[dict]
 
     # call each routine depending on the sequence name
     for seq_regex, fcn_name in config:  # loop over sequence decision tree
@@ -119,22 +119,25 @@ def build_scan_from_series(volume_list: list[Volume], config: list) -> list[dict
 
             for key in scan.keys():
 
-                with warnings.catch_warnings():  # supress a warning, wich does not make sense to me...
-                    warnings.filterwarnings('ignore',r"Creating an ndarray from ragged nested sequences")
-                    unique_stuff = np.unique( scan[key] )
+                try:
+                    unique_stuff = series[key].unique()
+                    if len(unique_stuff) == 1:
+                        scan[key] = unique_stuff[0]
+                    else:
+                        pass
 
-                if len(unique_stuff) == 1:  # if info is same acroos all nifti, keep it reduced, for readability
-                    scan[key] = unique_stuff
-                else:
-                    pass # just keep everything
+                except TypeError:  # unique() on 'list' is not possible, but it is on 'tuple'
+                    unique_stuff = series[key].transform(tuple).unique()
+                    if len(unique_stuff) == 1:
+                        scan[key] = unique_stuff[0]
+                    else:
+                        pass
 
-                # special case : if there is only a 'non', delete the key, since the information is not relevent
-                if type(scan[key]) is np.ndarray and len(scan[key]) is 1:
-                    scan[key] = scan[key][0]
-                    if type(scan[key]) == np.float64 and np.isnan(scan[key]):
-                        to_delete.append(key)
+                # remove nan
+                if type(scan[key]) is np.float64 or type(scan[key]) is float and np.isnan(scan[key]):
+                    to_delete.append(key)
 
-            for key in to_delete:
+            for key in to_delete:  # remove keys with juste a s 1x1 nan
                 del scan[key]
     
             scans.append(scan)
