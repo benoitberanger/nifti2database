@@ -65,41 +65,38 @@ def build_scan_from_series(volume_list: list[Volume], config: list) -> list[dict
         seqinfo = niix2bids.decision_tree.utils.slice_with_genericfield(df, 'PulseSequenceName', seq_regex)
         if seqinfo.empty: continue  # just to run the code faster
 
+        # we group using raw json info and the "run" number from the bids decision tree in niix2bids
         columns = ['PatientName', 'ProtocolName', 'run']
         groups = seqinfo.groupby(columns)
 
         for _, series in groups:
-            scan = series.to_dict('list')
-            to_delete = []
-            for key in scan.keys():
-                with warnings.catch_warnings():
-                    warnings.filterwarnings('ignore',r"Creating an ndarray from ragged nested sequences")
-                    scan[key] = np.unique( scan[key] )
 
+            scan = series.to_dict('list') # convert the DataFrame to standard dict
+
+            nRow = series.shape[0]
+            to_delete = []
+
+            for key in scan.keys():
+
+                with warnings.catch_warnings():  # supress a warning, wich does not make sense to me...
+                    warnings.filterwarnings('ignore',r"Creating an ndarray from ragged nested sequences")
+                    unique_stuff = np.unique( scan[key] )
+
+                if len(unique_stuff) == 1:  # if info is same acroos all nifti, keep it reduced, for readability
+                    scan[key] = unique_stuff
+                else:
+                    pass # just keep everything
+
+                # special case : if there is only a 'non', delete the key, since the information is not relevent
                 if type(scan[key]) is np.ndarray and len(scan[key]) is 1:
                     scan[key] = scan[key][0]
                     if type(scan[key]) == np.float64 and np.isnan(scan[key]):
                         to_delete.append(key)
-                    # if type(scan[key][0]) is np.str_ :
-                    #     scan[key] = str(scan[key][0])
-                    # # elif len(scan[key])>1:
-                    # #     pass
-                    #     # scan[key]
-                    # elif np.isnan(scan[key][0]):
-                    #     to_delete.append(key)
 
-                # elif len(scan[key]) == 1:
-                #     scan[key] = scan[key][0]
-
-                    # if isinstance(type(scan[key]), type(np.array)) and scan[key].ndim == 0:
-                    #     to_delete.append(key)
-                else:
-                    scan[key] = scan[key].tolist()
-
-        for key in to_delete:
-            del scan[key]
-
-        scans.append(scan)
+            for key in to_delete:
+                del scan[key]
+    
+            scans.append(scan)
 
     return scans
 
