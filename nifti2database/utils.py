@@ -1,6 +1,8 @@
 # standard modules
 import logging
 import warnings
+import os
+import json
 
 # dependency modules
 import niix2bids
@@ -9,6 +11,7 @@ from niix2bids.utils import logit
 import nibabel
 import numpy as np
 import pandas
+import psycopg2
 
 # local modules
 
@@ -167,6 +170,10 @@ def build_scan_from_series(df: pandas.DataFrame, config: list) -> list[dict]:
                 if (type(scan[key]) is np.float64 or type(scan[key]) is float) and np.isnan(scan[key]):
                     to_delete.append(key)
 
+                # convert some fields into regular builtin objects
+                if type(scan[key]) is np.int64:
+                    scan[key] = int(scan[key])
+
             for key in to_delete:  # remove keys with juste a s 1x1 nan
                 del scan[key]
     
@@ -175,3 +182,62 @@ def build_scan_from_series(df: pandas.DataFrame, config: list) -> list[dict]:
     return scans
 
     log.info(f'...decision tree done')
+
+
+########################################################################################################################
+def connect_to_datase() -> psycopg2.extensions.connection:
+
+    log = niix2bids.utils.get_logger()
+
+    # fetch crendtial in home directory
+    cred_path = os.path.join(os.path.expanduser("~"),"credentials_nifti2database")
+    log.info(f"Loading credentials : {cred_path}")
+    with open(cred_path,'r') as fid:
+        cred_dic = json.load(fid)
+
+    # connect to DB
+    log.info(f"Connecting to database...")
+    con = psycopg2.connect(
+        database=cred_dic['database'],
+        user    =cred_dic['user'    ],
+        password=cred_dic['password'],
+        host    =cred_dic['host'    ],
+        port    =cred_dic['port'    ]
+    )
+    log.info(f"... done")
+
+    return con
+
+
+########################################################################################################################
+def insert_scan_to_database(con: psycopg2.extensions.connection, scans: list[dict]) -> None:
+
+    # open "cursor" to prepare SQL request
+    cur = con.cursor()
+
+    # insert scans
+    for scan in scans:
+
+        # change some variables type so they can fit in the SQL request ================================================
+        scan_clean = scan
+
+        # change Volume objects to a standard path str
+        if type(scan['Volume']) is niix2bids.classes.Volume:
+            scan_clean['Volume'] = vol.nii.path
+        else: # its a list[Volume]
+            path_list = []
+            for vol in scan['Volume']:
+                path_list.append(vol.nii.path)
+            scan_clean['Volume'] = path_list
+
+        dict_str = json.dumps(scan_clean)
+
+        # change NaN to 'NaN'
+        dict_str = dict_str.replace('NaN', '"NaN"')
+
+        # insert request
+        cur.execute(f"INSERT INTO nifti2database_schema.nifti_json (\"json\", seriesinstanceuid, insertion_time) VALUES('{dict_str}', 'abcd', now());")
+        con.commit()
+
+    cur.close()
+    con.close()

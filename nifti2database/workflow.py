@@ -72,6 +72,12 @@ def run(args: argparse.Namespace) -> None:
 
     # ok here is the most important part : regroup volumes by scan
     scans = nifti2database.utils.build_scan_from_series(df, config)
+
+    # connect to database
+    con = nifti2database.utils.connect_to_datase()
+
+    # insert scans to database
+    nifti2database.utils.insert_scan_to_database(con, scans)
     stop_time = time.time()
 
     log.info(f'Total execution time is : {stop_time-star_time:.3f}s')
