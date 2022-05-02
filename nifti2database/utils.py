@@ -55,7 +55,7 @@ def display_logs_from_decision_tree(volume_list: list[Volume]) -> None:
 
 
 ########################################################################################################################
-@logit("Reading all nifti headers to extract info absent from the JSON. This may take a while... ",level=logging.INFO)
+@logit("Reading all nifti headers to extract info absent from the JSON. This may take a while... ", level=logging.INFO)
 def read_all_nifti_header(df: pandas.DataFrame) -> pandas.DataFrame:
 
     Matrix     = []
@@ -113,6 +113,7 @@ def read_all_nifti_header(df: pandas.DataFrame) -> pandas.DataFrame:
 
 
 ########################################################################################################################
+@logit("Concatenante BIDSfields from niix2bids to the json dict", level=logging.INFO)
 def concat_bidsfields_to_seqparam(df: pandas.DataFrame) -> pandas.DataFrame:
     
     for row in df.index:
@@ -130,10 +131,8 @@ def concat_bidsfields_to_seqparam(df: pandas.DataFrame) -> pandas.DataFrame:
 
 
 ########################################################################################################################
+@logit("Regroup each nifti into a group of 'scan'. 1 'scan'= 1 MRI sequence", level=logging.INFO)
 def build_scan_from_series(df: pandas.DataFrame, config: list) -> list[dict]:
-
-    log = niix2bids.utils.get_logger()
-    log.info(f'starting decision tree...')
 
     scans = []  # list[dict]
 
@@ -181,11 +180,12 @@ def build_scan_from_series(df: pandas.DataFrame, config: list) -> list[dict]:
 
     return scans
 
-    log.info(f'...decision tree done')
-
 
 ########################################################################################################################
+@logit("Regroup each nifti into a group of 'scan'. 1 'scan'= 1 MRI sequence", level=logging.INFO)
 def remove_duplicate(scans: list[dict]) -> list[dict]:
+
+    log = niix2bids.utils.get_logger()
 
     scan_id = [ scan['SeriesInstanceUID'] if type(scan['SeriesInstanceUID']) is str else scan['SeriesInstanceUID'][0]
                 for scan in scans ]
@@ -197,9 +197,12 @@ def remove_duplicate(scans: list[dict]) -> list[dict]:
     for idx in uniq_idx:  # sort in descending order
         scans_unique.append(scans[idx])
 
+    log.info(f"nScan={len(scans)} // nUnique={len(scans_unique)} // nDuplicate={len(scans)- len(scans_unique)}")
+
     return scans_unique
 
 ########################################################################################################################
+@logit("Connection to database using psycopg2.connect()", level=logging.INFO)
 def connect_to_datase() -> psycopg2.extensions.connection:
 
     log = niix2bids.utils.get_logger()
@@ -225,17 +228,24 @@ def connect_to_datase() -> psycopg2.extensions.connection:
 
 
 ########################################################################################################################
+@logit("Get list of scans in database, and add the 'new' ones", level=logging.INFO)
 def insert_scan_to_database(con: psycopg2.extensions.connection, scans: list[dict]) -> None:
+
+    log = niix2bids.utils.get_logger()
 
     # open "cursor" to prepare SQL request
     cur = con.cursor()
 
-    # first, we check if the scan already exist
+    # first, we check if the scan already exist ------------------------------------------------------------------------
+
+    log.info("Fetching existing scans in database")
 
     # get list of scans in the db
     cur.execute(f"SELECT seriesinstanceuid FROM nifti2database_schema.nifti_json;")
     db_id = cur.fetchall()
-    db_id = frozenset([id[0] for id in db_id])  # fronzenset is supposed to be fast for
+    db_id = frozenset([id[0] for id in db_id])  # fronzenset is supposed to be faster for comparaison operations
+
+    log.info(f"Found {len(db_id)} scans in database")
 
     if len(db_id)>0:  # just to check if the db is empty or not
 
@@ -253,10 +263,12 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, scans: list[dic
     else:
         scan_new = scans
 
-    # insert scans
+    log.info(f"nScanDB={len(scans)} // nScanToAdd={len(scans)} // nScanNew={len(scan_new)}")
+
+    # insert new scans -------------------------------------------------------------------------------------------------
     for scan in scan_new:
 
-        # change some variables type so they can fit in the SQL request ================================================
+        # change some variables type so they can fit in the SQL request
         scan_clean = scan.copy()
 
         # change Volume objects to a standard path str
@@ -275,9 +287,12 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, scans: list[dic
 
         first_SeriesInstanceUID = scan_clean['SeriesInstanceUID'] if type(scan_clean['SeriesInstanceUID']) is str else scan_clean['SeriesInstanceUID'][0]
 
+        log.info(f"Adding scan to database : { scan_clean['Volume'] } ")
+
         # insert request
         cur.execute(f"INSERT INTO nifti2database_schema.nifti_json (dict, seriesinstanceuid, insertion_time) VALUES('{dict_str}', '{first_SeriesInstanceUID}', now());")
         con.commit()
 
     cur.close()
     con.close()
+    log.info("Connection to dabase closed")
