@@ -73,15 +73,15 @@ def run(args: argparse.Namespace) -> None:
     # ok here is the most important part : regroup volumes by scan
     scans = nifti2database.utils.build_scan_from_series(df, config)
 
+    # duplicate happen during dev, but should not happen for prodution
+    # anyway, check it and log it
+    scans = nifti2database.utils.remove_duplicate(scans)
+
     # connect to database
     con = nifti2database.utils.connect_to_datase()
 
     # insert scans to database
     nifti2database.utils.insert_scan_to_database(con, scans)
-
-    print(scans[0])
-    import pandas
-    df = pandas.DataFrame(scans)
     
     stop_time = time.time()
 

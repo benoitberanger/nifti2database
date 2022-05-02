@@ -1,7 +1,8 @@
 CREATE TABLE nifti2database_schema.nifti_json (
-	dict jsonb NULL,
-	seriesinstanceuid varchar (70) NOT NULL,
-	insertion_time timestamp with time zone NOT NULL
+	dict jsonb NOT NULL,
+	seriesinstanceuid varchar(70) NOT NULL,
+	insertion_time timestamptz NOT NULL,
+	CONSTRAINT nifti_json_pk PRIMARY KEY (seriesinstanceuid)
 );
 
 GRANT ALL ON TABLE nifti2database_schema.nifti_json TO nifti2database_app;
@@ -13,4 +14,3 @@ INSERT INTO nifti2database_schema.nifti_json
 VALUES('{}', 'abcd', now());
 
 select * from nifti2database_schema.nifti_json;
-
