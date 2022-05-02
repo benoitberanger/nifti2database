@@ -235,8 +235,10 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, scans: list[dic
         # change NaN to 'NaN'
         dict_str = dict_str.replace('NaN', '"NaN"')
 
+        first_SeriesInstanceUID = scan_clean['SeriesInstanceUID'] if type(scan_clean['SeriesInstanceUID']) is str else scan_clean['SeriesInstanceUID'][0]
+
         # insert request
-        cur.execute(f"INSERT INTO nifti2database_schema.nifti_json (\"json\", seriesinstanceuid, insertion_time) VALUES('{dict_str}', 'abcd', now());")
+        cur.execute(f"INSERT INTO nifti2database_schema.nifti_json (dict, seriesinstanceuid, insertion_time) VALUES('{dict_str}', '{first_SeriesInstanceUID}', now());")
         con.commit()
 
     cur.close()

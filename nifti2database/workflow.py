@@ -78,6 +78,11 @@ def run(args: argparse.Namespace) -> None:
 
     # insert scans to database
     nifti2database.utils.insert_scan_to_database(con, scans)
+
+    print(scans[0])
+    import pandas
+    df = pandas.DataFrame(scans)
+    
     stop_time = time.time()
 
     log.info(f'Total execution time is : {stop_time-star_time:.3f}s')

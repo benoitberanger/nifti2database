@@ -1,13 +1,15 @@
 CREATE TABLE nifti2database_schema.nifti_json (
-	"json" jsonb NULL,
-	seriesinstanceuid varchar(70) NOT NULL,
-	insertion_time time(0) NOT NULL
+	dict jsonb NULL,
+	seriesinstanceuid varchar (70) NOT NULL,
+	insertion_time timestamp with time zone NOT NULL
 );
+
+GRANT ALL ON TABLE nifti2database_schema.nifti_json TO nifti2database_app;
 
 select * from nifti2database_schema.nifti_json;
 
 INSERT INTO nifti2database_schema.nifti_json
-("json", seriesinstanceuid, insertion_time)
+(dict, seriesinstanceuid, insertion_time)
 VALUES('{}', 'abcd', now());
 
 select * from nifti2database_schema.nifti_json;
