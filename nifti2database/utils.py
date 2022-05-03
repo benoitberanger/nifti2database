@@ -241,7 +241,7 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, scans: list[dic
     log.info("Fetching existing scans in database")
 
     # get list of scans in the db
-    cur.execute(f"SELECT seriesinstanceuid FROM nifti2database_schema.nifti_json;")
+    cur.execute(f"SELECT suid FROM nifti2database_schema.nifti_json;")
     db_id = cur.fetchall()
     db_id = frozenset([id[0] for id in db_id])  # fronzenset is supposed to be faster for comparaison operations
 
@@ -290,7 +290,7 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, scans: list[dic
         log.info(f"Adding scan to database : { scan_clean['Volume'] } ")
 
         # insert request
-        cur.execute(f"INSERT INTO nifti2database_schema.nifti_json (dict, seriesinstanceuid, insertion_time) VALUES('{dict_str}', '{first_SeriesInstanceUID}', now());")
+        cur.execute(f"INSERT INTO nifti2database_schema.nifti_json (dict, suid, patient_name, insertion_time) VALUES('{dict_str}', '{first_SeriesInstanceUID}', '{scan_clean['PatientName']}', now());")
         con.commit()
 
     cur.close()
