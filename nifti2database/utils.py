@@ -78,12 +78,9 @@ def read_all_nifti_header(df: pandas.DataFrame) -> pandas.DataFrame:
         # format parameters
         matrix = list(matrix)
         resolution = np.round(resolution, 3).astype(float).tolist()
-        fov = [int(x) for x in fov]
-
-        # # this is nuts : i cannot assign a 'list' to a specific row & column
-        # df.loc[row,'Matrix'     ] = matrix
-        # df.loc[row,'Resolution' ] = resolution
-        # df.loc[row,'FoV'        ] = fov
+        fov[0:2] = [int(x) for x in fov[0:2]]  # x y z are integers, but not t
+        if len(fov)==4:
+            fov[3] = np.round(fov[3],3)  # round t to millisecond
 
         df.loc[row,'Mx'] = matrix[0]
         df.loc[row,'My'] = matrix[1]
@@ -104,6 +101,17 @@ def read_all_nifti_header(df: pandas.DataFrame) -> pandas.DataFrame:
         Matrix.append(matrix)
         Resolution.append(resolution)
         FoV.append(fov)
+
+
+    # need to force int on the column
+    df['Fx'] = df['Fx'].astype(int)
+    df['Fy'] = df['Fy'].astype(int)
+    df['Fz'] = df['Fz'].astype(int)
+    if 'Ft' in df.columns:
+        df['Ft'] = df['Ft'].round(3)  # round to millisecond
+    df['Mx'] = df['Mx'].astype(int)
+    df['My'] = df['My'].astype(int)
+    df['Mz'] = df['Mz'].astype(int)
 
     df['Matrix'    ] = Matrix
     df['Resolution'] = Resolution
