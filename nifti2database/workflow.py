@@ -19,15 +19,19 @@ def run(args: argparse.Namespace) -> None:
 
     star_time = time.time()
 
+    # create output dir id needed
+    if args.out_dir and not os.path.exists(args.out_dir):
+        os.mkdir(args.out_dir)
+
     # initialize logger (console & file)
-    niix2bids.utils.init_logger(args.out_dir, args.logfile)
+    niix2bids.utils.init_logger(args.out_dir is not None, args.out_dir)
     log = niix2bids.utils.get_logger()
     log.info(f"nifti2database=={nifti2database.metadata.get_nifti2database_version()}")
 
     # logs
     log.info(f"in_dir  : {args.in_dir}")
     log.info(f"out_dir : {args.out_dir}")
-    if args.logfile:
+    if args.out_dir:
         log.info(f"logfile : {log.__class__.root.handlers[1].baseFilename}")
 
     # check if input dir exists

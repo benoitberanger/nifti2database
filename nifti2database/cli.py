@@ -21,7 +21,8 @@ def format_args(args: argparse.Namespace) -> argparse.Namespace:
     args.in_dir = [os.path.abspath(one_dir) for one_dir in args.in_dir]
 
     # out
-    args.out_dir = '/tmp/'
+    if args.out_dir:
+        args.out_dir = os.path.abspath(args.out_dir)
 
     return args
 
@@ -60,15 +61,10 @@ def get_parser() -> argparse.ArgumentParser:
                           metavar='DIR',
                           required=True)
 
-    optional.add_argument("--logfile",
-                          help="Write logfile",
-                          dest="logfile",
-                          action="store_true")
-    optional.add_argument("--no-logfile",
-                          help="Disable writing logfile (default)",
-                          dest="logfile",
-                          action="store_false")
-    optional.set_defaults(logfile=False)
+    optional.add_argument("-o", "--out_dir",
+                          help="Output directory, receiving the log file.",
+                          metavar='DIR',
+                          required=False)
 
     optional.add_argument("-c", "--config_file",
                           help=(
@@ -80,7 +76,6 @@ def get_parser() -> argparse.ArgumentParser:
                           ),
                           dest="config_file",
                           metavar='FILE',
-                          # default=os.path.join( niix2bids.__path__[0], 'config_file', 'siemens.py'))
                           default=[
                               os.path.join( os.path.expanduser('~'), 'niix2bids_config_file', 'siemens.py'),
                               os.path.join( niix2bids.__path__[0], 'config_file', 'siemens.py')
