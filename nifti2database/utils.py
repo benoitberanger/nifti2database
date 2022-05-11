@@ -295,10 +295,16 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, scans: list[dic
 
         first_SeriesInstanceUID = scan_clean['SeriesInstanceUID'] if type(scan_clean['SeriesInstanceUID']) is str else scan_clean['SeriesInstanceUID'][0]
 
+        # 'AcquisitionDateTime': '2021-10-25T09:36:22.535000' => split with the T, replace - by _
+        if type(scan_clean['AcquisitionDateTime']) is str:
+            patient_id = scan_clean['AcquisitionDateTime']   .split('T')[0].replace('-','_') + "_" + scan_clean['PatientName']
+        elif type(scan_clean['AcquisitionDateTime']) is list:
+            patient_id = scan_clean['AcquisitionDateTime'][0].split('T')[0].replace('-','_') + "_" + scan_clean['PatientName']
+
         log.info(f"Adding scan to database : { scan_clean['Volume'] } ")
 
         # insert request
-        cur.execute(f"INSERT INTO nifti2database_schema.nifti_json (dict, suid, patient_name, insertion_time) VALUES('{dict_str}', '{first_SeriesInstanceUID}', '{scan_clean['PatientName']}', now());")
+        cur.execute(f"INSERT INTO nifti2database_schema.nifti_json (dict, suid, patient_id, insertion_time) VALUES('{dict_str}', '{first_SeriesInstanceUID}', '{patient_id}', now());")
         con.commit()
 
     cur.close()
