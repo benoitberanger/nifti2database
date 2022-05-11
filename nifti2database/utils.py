@@ -3,6 +3,8 @@ import logging
 import warnings
 import os
 import json
+import random
+import string
 
 # dependency modules
 import niix2bids
@@ -211,62 +213,72 @@ def remove_duplicate(scans: list[dict]) -> list[dict]:
 
 ########################################################################################################################
 @logit("Connection to database using psycopg2.connect()", level=logging.INFO)
-def connect_to_datase() -> psycopg2.extensions.connection:
+def connect_to_datase(connect_or_prepare: str, credentials:  str) -> psycopg2.extensions.connection:
 
     log = niix2bids.utils.get_logger()
 
-    # fetch crendtial in home directory
-    cred_path = os.path.join(os.path.expanduser("~"),"credentials_nifti2database")
-    log.info(f"Loading credentials : {cred_path}")
-    with open(cred_path,'r') as fid:
-        cred_dic = json.load(fid)
+    if connect_or_prepare == "connect":
 
-    # connect to DB
-    log.info(f"Connecting to database...")
-    con = psycopg2.connect(
-        database=cred_dic['database'],
-        user    =cred_dic['user'    ],
-        password=cred_dic['password'],
-        host    =cred_dic['host'    ],
-        port    =cred_dic['port'    ]
-    )
-    log.info(f"... done")
+        # fetch crendtial in home directory
+        log.info(f"Loading credentials : {credentials}")
+        with open(credentials,'r') as fid:
+            cred_dic = json.load(fid)
 
-    return con
+        # connect to DB
+        log.info(f"Connecting to database...")
+        con = psycopg2.connect(
+            database=cred_dic['database'],
+            user    =cred_dic['user'    ],
+            password=cred_dic['password'],
+            host    =cred_dic['host'    ],
+            port    =cred_dic['port'    ]
+        )
+        log.info(f"... done")
+
+        return con
+
+    else:
+
+        return None
 
 
 ########################################################################################################################
 @logit("Get list of scans in database, and add the 'new' ones", level=logging.INFO)
-def insert_scan_to_database(con: psycopg2.extensions.connection, scans: list[dict]) -> None:
+def insert_scan_to_database(con: psycopg2.extensions.connection, scans: list[dict]) -> list[str]:
 
     log = niix2bids.utils.get_logger()
 
-    # open "cursor" to prepare SQL request
-    cur = con.cursor()
+    if con is not None:
 
-    # first, we check if the scan already exist ------------------------------------------------------------------------
+        # open "cursor" to prepare SQL request
+        cur = con.cursor()
 
-    log.info("Fetching existing scans in database")
+        # first, we check if the scan already exist ------------------------------------------------------------------------
 
-    # get list of scans in the db
-    cur.execute(f"SELECT suid FROM nifti2database_schema.nifti_json;")
-    db_id = cur.fetchall()
-    db_id = frozenset([id[0] for id in db_id])  # fronzenset is supposed to be faster for comparaison operations
+        log.info("Fetching existing scans in database")
 
-    log.info(f"Found {len(db_id)} scans in database")
+        # get list of scans in the db
+        cur.execute(f"SELECT suid FROM nifti2database_schema.nifti_json;")
+        db_id = cur.fetchall()
+        db_id = frozenset([id[0] for id in db_id])  # fronzenset is supposed to be faster for comparaison operations
 
-    if len(db_id)>0:  # just to check if the db is empty or not
+        log.info(f"Found {len(db_id)} scans in database")
 
-        # establish scan_id
-        scan_id = [ scan['SeriesInstanceUID'] if type(scan['SeriesInstanceUID']) is str else scan['SeriesInstanceUID'][0]
-                    for scan in scans ]
+        if len(db_id)>0:  # just to check if the db is empty or not
 
-        # remove if already exist
-        to_remove = [ sid in db_id for sid in scan_id ]  # list[bool]
-        scan_new = []
-        for idx, status in enumerate(to_remove):
-            if status is False:
-                scan_new.append(scans[idx])
+            # establish scan_id
+            scan_id = [ scan['SeriesInstanceUID'] if type(scan['SeriesInstanceUID']) is str else scan['SeriesInstanceUID'][0]
+                        for scan in scans ]
+
+            # remove if already exist
+            to_remove = [ sid in db_id for sid in scan_id ]  # list[bool]
+            scan_new = []
+            for idx, status in enumerate(to_remove):
+                if status is False:
+                    scan_new.append(scans[idx])
+
+        else:
+            scan_new = scans
 
     else:
         scan_new = scans
@@ -274,6 +286,7 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, scans: list[dic
     log.info(f"nScanDB={len(scans)} // nScanToAdd={len(scans)} // nScanNew={len(scan_new)}")
 
     # insert new scans -------------------------------------------------------------------------------------------------
+    insert_list = []
     for scan in scan_new:
 
         # change some variables type so they can fit in the SQL request
@@ -303,10 +316,40 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, scans: list[dic
 
         log.info(f"Adding scan to database : { scan_clean['Volume'] } ")
 
-        # insert request
-        cur.execute(f"INSERT INTO nifti2database_schema.nifti_json (dict, suid, patient_id, insertion_time) VALUES('{dict_str}', '{first_SeriesInstanceUID}', '{patient_id}', now());")
-        con.commit()
+        insert_line = f"INSERT INTO nifti2database_schema.nifti_json (dict, suid, patient_id, insertion_time) VALUES('{dict_str}', '{first_SeriesInstanceUID}', '{patient_id}', now());"
+        insert_list.append(insert_line)
 
-    cur.close()
-    con.close()
+        if con is not None:
+
+            # insert request
+            cur.execute(insert_line)
+            con.commit()
+
+    if con is not None:
+        cur.close()
+        con.close()
+
     log.info("Connection to dabase closed")
+
+    return insert_list
+
+
+########################################################################################################################
+@logit(f"Writing INSERT lines to file",level=logging.INFO)
+def write_insert_list(logfile: str, insert_list: list[str]) -> None:
+
+    log = niix2bids.utils.get_logger()
+
+    # generate random id
+    id = ''.join(random.choice(string.ascii_lowercase + string.ascii_uppercase + string.digits) for _ in range(8))
+
+    # add id as suffix to logfile
+    name, ext = os.path.splitext(logfile)
+    insert_file = f"{name}_{id}{ext}"
+    insert_fullpath = os.path.join(os.path.dirname(logfile), insert_file)
+
+    log.info(f"writing INSERT lines in : {insert_fullpath}")
+
+    # write
+    with open(insert_fullpath , mode='wt', encoding='utf-8' ) as fp:
+        fp.write('\n'.join(insert_list))

@@ -24,6 +24,9 @@ def format_args(args: argparse.Namespace) -> argparse.Namespace:
     if args.out_dir:
         args.out_dir = os.path.abspath(args.out_dir)
 
+    # credentials
+    args.credentials = os.path.abspath(args.credentials)
+
     return args
 
 
@@ -66,7 +69,19 @@ def get_parser() -> argparse.ArgumentParser:
                           metavar='DIR',
                           required=False)
 
-    optional.add_argument("-c", "--config_file",
+    optional.add_argument("--connect",
+                          help="Use psycopg2.connect() to execute SQL 'INSERT' request (default)",
+                          dest="connect_or_prepare",
+                          action="store_const",
+                          const="connect")
+    optional.add_argument("--prepare",
+                          help="Do not connect and write all SQL 'INSERT' lines in an output file",
+                          dest="connect_or_prepare",
+                          action="store_const",
+                          const="prepare")
+    optional.set_defaults(connect_or_prepare="connect")
+
+    optional.add_argument("--config_file",
                           help=(
                               "If you want to use non-coded sequences such as new Products, WIP or C2P,\n"
                               "you can provide a config file.\n"
@@ -80,6 +95,27 @@ def get_parser() -> argparse.ArgumentParser:
                               os.path.join( os.path.expanduser('~'), 'niix2bids_config_file', 'siemens.py'),
                               os.path.join( niix2bids.__path__[0], 'config_file', 'siemens.py')
                           ]
+                          )
+
+    optional.add_argument("--credentials",
+                          help=(
+                              "[nifti2database] will by default look for a credatial json files \n"
+                              "located here : ~/credentials_nifti2database.json \n"
+                              "Otherwise, the user can provide it's path using this argument \n"
+                              "The file should lool like this :  \n"
+                              '{ \n'
+                              '    "user": "usename", \n'
+                              '    "password": "********", \n'
+                              '    "database": "mydatabase", \n'
+                              '    "host": "ip_adress/host_name", \n'
+                              '    "port": "5432" \n'
+                              '} \n'
+                              "\n"
+
+                          ),
+                          dest="credentials",
+                          metavar='FILE',
+                          default=os.path.join( os.path.expanduser('~'), 'credentials_nifti2database.json' )
                           )
 
     optional.add_argument("-v", "--version",

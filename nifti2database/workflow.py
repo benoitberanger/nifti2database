@@ -32,7 +32,21 @@ def run(args: argparse.Namespace) -> None:
     log.info(f"in_dir  : {args.in_dir}")
     log.info(f"out_dir : {args.out_dir}")
     if args.out_dir:
-        log.info(f"logfile : {log.__class__.root.handlers[1].baseFilename}")
+        logfile = log.__class__.root.handlers[1].baseFilename
+        log.info(f"logfile : {logfile}")
+    log.info(f"connect_or_prepare : {args.connect_or_prepare}")
+
+    if args.connect_or_prepare == 'prepare' and args.out_dir is None:
+        log.error(f"if '--prepare' is used , '--out_dir' has to be defined too")
+        sys.exit(1)
+
+    # check for credentials file
+    if args.connect_or_prepare == "connect":
+        if not os.path.exists(args.credentials):
+            log.error(f"credentials file does not exist : {args.credentials}")
+            sys.exit(1)
+        else:
+            log.info(f"credentials : {args.credentials}")
 
     # check if input dir exists
     for one_dir in args.in_dir:
@@ -82,11 +96,14 @@ def run(args: argparse.Namespace) -> None:
     scans = nifti2database.utils.remove_duplicate(scans)
 
     # connect to database
-    con = nifti2database.utils.connect_to_datase()
+    con = nifti2database.utils.connect_to_datase(args.connect_or_prepare, args.credentials)
 
     # insert scans to database
-    nifti2database.utils.insert_scan_to_database(con, scans)
-    
+    insert_list = nifti2database.utils.insert_scan_to_database(con, scans)
+
+    if args.connect_or_prepare == "prepare":
+        nifti2database.utils.write_insert_list(logfile, insert_list)
+
     stop_time = time.time()
 
     log.info(f'Total execution time is : {stop_time-star_time:.3f}s')
