@@ -1,7 +1,7 @@
 CREATE TABLE nifti2database_schema.nifti_json (
 	dict jsonb NOT NULL,
-	suid varchar(70) NOT NULL,
-	patient_id varchar(64) NOT NULL,
+	suid varchar(128) NOT NULL,
+	patient_id varchar(128) NOT NULL,
 	insertion_time timestamptz NOT NULL,
 	CONSTRAINT nifti_json_pk PRIMARY KEY (suid)
 );
