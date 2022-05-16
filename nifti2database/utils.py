@@ -154,7 +154,7 @@ def build_scan_from_series(df: pandas.DataFrame, config: list) -> list[dict]:
         if seqinfo.empty: continue  # just to run the code faster
 
         # we group using raw json info and the "run" number from the bids decision tree in niix2bids
-        columns = ['PatientName', 'ProtocolName', 'run', 'MRAcquisitionType']
+        columns = ['PatientName', 'ProtocolName', 'run', 'MRAcquisitionType', 'StudyInstanceUID']
         # 'MRAcquisitionType' is can help sometimes for grouping
 
         groups = seqinfo.groupby(columns)
@@ -185,7 +185,7 @@ def build_scan_from_series(df: pandas.DataFrame, config: list) -> list[dict]:
                 if type(scan[key]) is np.int64:
                     scan[key] = int(scan[key])
 
-            for key in to_delete:  # remove keys with juste a s 1x1 nan
+            for key in to_delete:  # remove keys with just a 1x1 nan
                 del scan[key]
     
             scans.append(scan)
