@@ -79,10 +79,10 @@ def read_all_nifti_header(df: pandas.DataFrame) -> pandas.DataFrame:
 
         # format parameters
         matrix = list(matrix)
-        resolution = np.round(resolution, 3).astype(float).tolist()
+        resolution = [round(r,3) for r in resolution]
         fov[0:2] = [int(x) for x in fov[0:2]]  # x y z are integers, but not t
         if len(fov)==4:
-            fov[3] = np.round(fov[3],3)  # round t to millisecond
+            fov[3] = round(fov[3],3)  # round to millisecond
 
         df.loc[row,'Mx'] = matrix[0]
         df.loc[row,'My'] = matrix[1]
