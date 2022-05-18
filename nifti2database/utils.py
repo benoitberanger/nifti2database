@@ -75,14 +75,7 @@ def read_all_nifti_header(df: pandas.DataFrame) -> pandas.DataFrame:
         # fetch raw parmeters
         matrix = nii.header.get_data_shape()
         resolution = nii.header.get_zooms()
-        fov = [ mx*res for mx,res in zip(matrix, resolution)]
-
-        # format parameters
-        matrix = list(matrix)
-        resolution = [round(r,3) for r in resolution]
-        fov[0:2] = [int(x) for x in fov[0:2]]  # x y z are integers, but not t
-        if len(fov)==4:
-            fov[3] = round(fov[3],3)  # round to millisecond
+        fov = tuple([ mx*res for mx,res in zip(matrix, resolution)])
 
         df.loc[row,'Mx'] = matrix[0]
         df.loc[row,'My'] = matrix[1]
@@ -103,17 +96,6 @@ def read_all_nifti_header(df: pandas.DataFrame) -> pandas.DataFrame:
         Matrix.append(matrix)
         Resolution.append(resolution)
         FoV.append(fov)
-
-
-    # need to force int on the column
-    df['Fx'] = df['Fx'].astype(int)
-    df['Fy'] = df['Fy'].astype(int)
-    df['Fz'] = df['Fz'].astype(int)
-    if 'Ft' in df.columns:
-        df['Ft'] = df['Ft'].round(3)  # round to millisecond
-    df['Mx'] = df['Mx'].astype(int)
-    df['My'] = df['My'].astype(int)
-    df['Mz'] = df['Mz'].astype(int)
 
     df['Matrix'    ] = Matrix
     df['Resolution'] = Resolution
@@ -302,6 +284,57 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, scans: list[dic
             for vol in scan['Volume']:
                 path_list.append(vol.nii.path)
             scan_clean['Volume'] = path_list
+
+        # clean values =================================================================================================
+        # this step looks overkill, but the simplification makes the jsonb (in the database) much cleaner
+        # => request in the database will be simplified, since the rounding will be done
+
+        # this function will convert scalar
+        def int_or_round3__scalar(scalar):
+            if (type(scalar) is np.float64 or type(scalar) is float) and np.isnan(scalar):
+                return scalar
+            scalar = float(scalar)  # conversion to the builtin float to avoid numpy.float64
+            scalar = round(scalar) if round(scalar) == round(scalar,3) else round(scalar,3)
+            return scalar
+
+        # this function will 'apply int_or_round3__scalar' on each element or sub-element
+        def int_or_round3(input):
+            if type(input) == np.float64:  # this is a scalar
+                return int_or_round3__scalar(input)
+            else: # tuple ? list[typle] ?
+                output_list = []
+                for elem in input:
+                    if type(elem) is tuple: # tuple
+                        output_list.append( tuple(map(int_or_round3__scalar,elem)) )
+                    else:
+                        output_list.append( int_or_round3__scalar(elem) )
+                return output_list
+
+        scan_clean['Mx'] = int_or_round3(scan_clean['Mx'])
+        scan_clean['My'] = int_or_round3(scan_clean['My'])
+        scan_clean['Mz'] = int_or_round3(scan_clean['Mz'])
+        if 'Mt' in scan_clean.keys():
+            scan_clean['Mt'] = int_or_round3(scan_clean['Mt'])
+
+        scan_clean['Rx'] = int_or_round3(scan_clean['Rx'])
+        scan_clean['Ry'] = int_or_round3(scan_clean['Ry'])
+        scan_clean['Rz'] = int_or_round3(scan_clean['Rz'])
+        if 'Rt' in scan_clean.keys():
+            scan_clean['Rt'] = int_or_round3(scan_clean['Rt'])
+
+        scan_clean['Fx'] = int_or_round3(scan_clean['Fx'])
+        scan_clean['Fy'] = int_or_round3(scan_clean['Fy'])
+        scan_clean['Fz'] = int_or_round3(scan_clean['Fz'])
+        if 'Ft' in scan_clean.keys():
+            scan_clean['Ft'] = int_or_round3(scan_clean['Ft'])
+
+        scan_clean['Matrix'    ] = int_or_round3(scan_clean['Matrix'    ])
+        scan_clean['Resolution'] = int_or_round3(scan_clean['Resolution'])
+        scan_clean['FoV'       ] = int_or_round3(scan_clean['FoV'       ])
+
+        scan_clean['run'] = int(scan_clean['run'])
+
+        # ==========================================================================================================
 
         dict_str = json.dumps(scan_clean)
 

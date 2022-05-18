@@ -15,3 +15,5 @@ INSERT INTO nifti2database_schema.nifti_json
 VALUES('{}', '0.0.0.0', '2022_01_01_DEV2_XXX', now());
 
 select * from nifti2database_schema.nifti_json;
+
+-- delete from nifti2database_schema.nifti_json;
