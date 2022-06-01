@@ -104,7 +104,7 @@ def get_parser() -> argparse.ArgumentParser:
                               "Otherwise, the user can provide it's path using this argument \n"
                               "The file should lool like this :  \n"
                               '{ \n'
-                              '    "user": "usename", \n'
+                              '    "user": "username", \n'
                               '    "password": "********", \n'
                               '    "database": "mydatabase", \n'
                               '    "host": "ip_adress/host_name", \n'

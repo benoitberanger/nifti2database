@@ -191,7 +191,7 @@ def remove_duplicate(scans: list[dict]) -> list[dict]:
     for idx in uniq_idx:  # sort in descending order
         scans_unique.append(scans[idx])
 
-    log.info(f"nScan={len(scans)} // nUnique={len(scans_unique)} // nDuplicate={len(scans)- len(scans_unique)}")
+    log.info(f"nScan={len(scans):,} // nUnique={len(scans_unique):,} // nDuplicate={len(scans)- len(scans_unique):,}")
 
     return scans_unique
 
@@ -246,7 +246,7 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, scans: list[dic
         db_id = cur.fetchall()
         db_id = frozenset([id[0] for id in db_id])  # fronzenset is supposed to be faster for comparaison operations
 
-        log.info(f"Found {len(db_id)} scans in database")
+        log.info(f"Found {len(db_id):,} scans in database")
 
         if len(db_id)>0:  # just to check if the db is empty or not
 
@@ -267,7 +267,7 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, scans: list[dic
     else:
         scan_new = scans
 
-    log.info(f"nScanDB={len(scans)} // nScanToAdd={len(scans)} // nScanNew={len(scan_new)}")
+    log.info(f"nScanDB={len(scans):,} // nScanToAdd={len(scans):,} // nScanNew={len(scan_new):,}")
 
     # insert new scans -------------------------------------------------------------------------------------------------
     insert_list = []
