@@ -20,7 +20,6 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     python_requires='>=3.9',
     install_requires=[
-        "setuptools",
         "pandas",     # for DataFrame
         "nibabel",    # to load nifti headers
         "niix2bids @ git+https://github.com/benoitberanger/niix2bids.git",  # this a the base workflow
