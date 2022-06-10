@@ -108,7 +108,9 @@ def get_parser() -> argparse.ArgumentParser:
                               '    "password": "********", \n'
                               '    "database": "mydatabase", \n'
                               '    "host": "ip_adress/host_name", \n'
-                              '    "port": "5432" \n'
+                              '    "port": "5432", \n'
+                              '    "schema: "myschema", \n'
+                              '    "table: "mytable" \n'
                               '} \n'
                               "\n"
 

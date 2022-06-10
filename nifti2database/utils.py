@@ -211,15 +211,17 @@ def connect_to_datase(connect_or_prepare: str, credentials:  str) -> psycopg2.ex
         # connect to DB
         log.info(f"Connecting to database...")
         con = psycopg2.connect(
-            database=cred_dic['database'],
-            user    =cred_dic['user'    ],
-            password=cred_dic['password'],
-            host    =cred_dic['host'    ],
-            port    =cred_dic['port'    ]
+            database   = cred_dic['database'],
+            user       = cred_dic['user'    ],
+            password   = cred_dic['password'],
+            host       = cred_dic['host'    ],
+            port       = cred_dic['port'    ],
+            sslmode    = 'disable',
+            gssencmode = 'disable',
         )
         log.info(f"... done")
 
-        return con
+        return con, cred_dic['schema'], cred_dic['table']
 
     else:
 
@@ -228,7 +230,7 @@ def connect_to_datase(connect_or_prepare: str, credentials:  str) -> psycopg2.ex
 
 ########################################################################################################################
 @logit("Get list of scans in database, and add the 'new' ones", level=logging.INFO)
-def insert_scan_to_database(con: psycopg2.extensions.connection, scans: list[dict]) -> list[str]:
+def insert_scan_to_database(con: psycopg2.extensions.connection, schema: str, talble: str, scans: list[dict]) -> list[str]:
 
     log = niix2bids.utils.get_logger()
 
@@ -242,7 +244,7 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, scans: list[dic
         log.info("Fetching existing scans in database")
 
         # get list of scans in the db
-        cur.execute(f"SELECT suid FROM nifti2database_schema.nifti_json;")
+        cur.execute(f"SELECT suid FROM {schema}.{talble};")
         db_id = cur.fetchall()
         db_id = frozenset([id[0] for id in db_id])  # fronzenset is supposed to be faster for comparaison operations
 
@@ -351,7 +353,7 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, scans: list[dic
 
         log.info(f"Adding scan to database : { scan_clean['Volume'] } ")
 
-        insert_line = f"INSERT INTO nifti2database_schema.nifti_json (dict, suid, patient_id, insertion_time) VALUES('{dict_str}', '{first_SeriesInstanceUID}', '{patient_id}', now());"
+        insert_line = f"INSERT INTO {schema}.{talble} (dict, suid, patient_id, insertion_time) VALUES('{dict_str}', '{first_SeriesInstanceUID}', '{patient_id}', now());"
         insert_list.append(insert_line)
 
         if con is not None:

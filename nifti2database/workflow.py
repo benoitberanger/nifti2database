@@ -96,10 +96,10 @@ def run(args: argparse.Namespace) -> None:
     scans = nifti2database.utils.remove_duplicate(scans)
 
     # connect to database
-    con = nifti2database.utils.connect_to_datase(args.connect_or_prepare, args.credentials)
+    con, schema, table = nifti2database.utils.connect_to_datase(args.connect_or_prepare, args.credentials)
 
     # insert scans to database
-    insert_list = nifti2database.utils.insert_scan_to_database(con, scans)
+    insert_list = nifti2database.utils.insert_scan_to_database(con, schema, table, scans)
 
     if args.connect_or_prepare == "prepare":
         nifti2database.utils.write_insert_list(logfile, insert_list)
