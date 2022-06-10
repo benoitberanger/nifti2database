@@ -111,7 +111,10 @@ def get_parser() -> argparse.ArgumentParser:
                               '    "port": "5432", \n'
                               '    "schema: "myschema", \n'
                               '    "table: "mytable" \n'
+                              '   ["sslmode": "disable"] \n'
+                              '   ["gssencmode": "disable"] \n'
                               '} \n'
+                              "!!! fields in [brackets] are optional, it denpends on the server config \n"
                               "\n"
 
                           ),

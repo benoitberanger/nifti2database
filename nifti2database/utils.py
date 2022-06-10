@@ -210,15 +210,22 @@ def connect_to_datase(connect_or_prepare: str, credentials:  str) -> psycopg2.ex
 
         # connect to DB
         log.info(f"Connecting to database...")
-        con = psycopg2.connect(
-            database   = cred_dic['database'],
-            user       = cred_dic['user'    ],
-            password   = cred_dic['password'],
-            host       = cred_dic['host'    ],
-            port       = cred_dic['port'    ],
-            sslmode    = 'disable',
-            # gssencmode = 'disable',
-        )
+
+        # prepare connection pamameters
+        connection_parameters = {
+            "database": cred_dic['database'],
+            "user"    : cred_dic['user'    ],
+            "password": cred_dic['password'],
+            "host"    : cred_dic['host'    ],
+            "port"    : cred_dic['port'    ],
+        }
+        if "sslmode" in cred_dic.keys():
+            connection_parameters['sslmode'   ] = cred_dic['sslmode'   ]
+        if "gssencmode" in cred_dic.keys():
+            connection_parameters['gssencmode'] = cred_dic['gssencmode']
+
+        # connect
+        con = psycopg2.connect(**connection_parameters)
         log.info(f"... done")
 
         return con, cred_dic['schema'], cred_dic['table']
