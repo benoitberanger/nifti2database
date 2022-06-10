@@ -217,7 +217,7 @@ def connect_to_datase(connect_or_prepare: str, credentials:  str) -> psycopg2.ex
             host       = cred_dic['host'    ],
             port       = cred_dic['port'    ],
             sslmode    = 'disable',
-            gssencmode = 'disable',
+            # gssencmode = 'disable',
         )
         log.info(f"... done")
 
