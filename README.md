@@ -61,7 +61,7 @@ nifti2database version = 0.0.2
 - `niix2bids` # decision tree of the nifti & json fields
 
 ## PostgreSQL
-Some notes/commands for initialization of the test database, schema and table are in [](db_scripts)
+Some notes/commands for initialization of the test database, schema and table are in [db_scripts](db_scripts)
 
 ### How to
 
