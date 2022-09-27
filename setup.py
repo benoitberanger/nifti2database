@@ -5,7 +5,7 @@ with open('nifti2database/metadata.py', 'r') as fp:
     __version__ = line.split()[2].strip("'")  # extract version number
 
 with open('README.md', 'r') as f:
-    long_description = f.readlines()
+    long_description = f.read()
 
 setuptools.setup(
     name="nifti2database",
