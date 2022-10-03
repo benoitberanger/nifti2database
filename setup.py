@@ -22,7 +22,7 @@ setuptools.setup(
     install_requires=[
         "pandas",     # for DataFrame
         "nibabel",    # to load nifti headers
-        "niix2bids @ git+https://github.com/benoitberanger/niix2bids.git",  # this a the base workflow
+        "niix2bids @ git+https://github.com/benoitberanger/niix2bids.git",  # this is the base workflow
         "psycopg2-binary"    # PostgreSQL + binary files instead of system lib
     ],
     entry_points={
@@ -30,11 +30,11 @@ setuptools.setup(
             'nifti2database = nifti2database.cli:main'
         ]
     },
-    classifiers=(
+    classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GLP3",
         "Operating System :: OS Independent",
-    ),
+    ],
     keywords='MRI nifti database',
     zip_safe=False
 )
