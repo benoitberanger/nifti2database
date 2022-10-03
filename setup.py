@@ -23,7 +23,7 @@ setuptools.setup(
         "pandas",     # for DataFrame
         "nibabel",    # to load nifti headers
         "niix2bids @ git+https://github.com/benoitberanger/niix2bids.git",  # this a the base workflow
-        "psycopg2"    # PostgreSQL
+        "psycopg2-binary"    # PostgreSQL + binary files instead of system lib
     ],
     entry_points={
         'console_scripts': [
