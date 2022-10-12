@@ -17,6 +17,7 @@ import psycopg2
 
 # local modules
 
+
 ########################################################################################################################
 def display_logs_from_decision_tree(volume_list: list[Volume]) -> None:
 
@@ -72,7 +73,7 @@ def read_all_nifti_header(df: pandas.DataFrame) -> pandas.DataFrame:
         # load header
         nii = nibabel.load(vol.nii.path)
 
-        # fetch raw parmeters
+        # fetch raw parameters
         matrix = nii.header.get_data_shape()
         resolution = nii.header.get_zooms()
         fov = tuple([ mx*res for mx,res in zip(matrix, resolution)])
@@ -195,6 +196,7 @@ def remove_duplicate(scans: list[dict]) -> list[dict]:
 
     return scans_unique
 
+
 ########################################################################################################################
 @logit("Connection to database using psycopg2.connect()", level=logging.INFO)
 def connect_to_datase(connect_or_prepare: str, credentials:  str) -> psycopg2.extensions.connection:
@@ -203,7 +205,7 @@ def connect_to_datase(connect_or_prepare: str, credentials:  str) -> psycopg2.ex
 
     if connect_or_prepare == "connect":
 
-        # fetch crendtial in home directory
+        # fetch credentials in home directory
         log.info(f"Loading credentials : {credentials}")
         with open(credentials,'r') as fid:
             cred_dic = json.load(fid)
@@ -211,7 +213,7 @@ def connect_to_datase(connect_or_prepare: str, credentials:  str) -> psycopg2.ex
         # connect to DB
         log.info(f"Connecting to database...")
 
-        # prepare connection pamameters
+        # prepare connection parameters
         connection_parameters = {
             "database": cred_dic['database'],
             "user"    : cred_dic['user'    ],
@@ -232,12 +234,12 @@ def connect_to_datase(connect_or_prepare: str, credentials:  str) -> psycopg2.ex
 
     else:
 
-        return None
+        return None, None, None
 
 
 ########################################################################################################################
 @logit("Get list of scans in database, and add the 'new' ones", level=logging.INFO)
-def insert_scan_to_database(con: psycopg2.extensions.connection, schema: str, talble: str, scans: list[dict]) -> list[str]:
+def insert_scan_to_database(con: psycopg2.extensions.connection, schema: str, table: str, scans: list[dict]) -> list[str]:
 
     log = niix2bids.utils.get_logger()
 
@@ -246,12 +248,12 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, schema: str, ta
         # open "cursor" to prepare SQL request
         cur = con.cursor()
 
-        # first, we check if the scan already exist ------------------------------------------------------------------------
+        # first, we check if the scan already exist --------------------------------------------------------------------
 
         log.info("Fetching existing scans in database")
 
         # get list of scans in the db
-        cur.execute(f"SELECT suid FROM {schema}.{talble};")
+        cur.execute(f"SELECT suid FROM {schema}.{table};")
         db_id = cur.fetchall()
         db_id = frozenset([id[0] for id in db_id])  # fronzenset is supposed to be faster for comparaison operations
 
@@ -310,10 +312,10 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, schema: str, ta
         def int_or_round3(input):
             if type(input) == np.float64:  # this is a scalar
                 return int_or_round3__scalar(input)
-            else: # tuple ? list[typle] ?
+            else:  # tuple ? list[tuple] ?
                 output_list = []
                 for elem in input:
-                    if type(elem) is tuple: # tuple
+                    if type(elem) is tuple:  # tuple
                         output_list.append( tuple(map(int_or_round3__scalar,elem)) )
                     else:
                         output_list.append( int_or_round3__scalar(elem) )
@@ -360,7 +362,7 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, schema: str, ta
 
         log.info(f"Adding scan to database : { scan_clean['Volume'] } ")
 
-        insert_line = f"INSERT INTO {schema}.{talble} (dict, suid, patient_id, insertion_time) VALUES('{dict_str}', '{first_SeriesInstanceUID}', '{patient_id}', now());"
+        insert_line = f"INSERT INTO {schema}.{table} (dict, suid, patient_id, insertion_time) VALUES('{dict_str}', '{first_SeriesInstanceUID}', '{patient_id}', now());"
         insert_list.append(insert_line)
 
         if con is not None:
