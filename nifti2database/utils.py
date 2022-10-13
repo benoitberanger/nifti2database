@@ -156,9 +156,13 @@ def build_scan_from_series(df: pandas.DataFrame, config: list) -> list[dict]:
                         scan[key] = unique_stuff[0]
 
                 except TypeError:  # unique() on 'list' is not possible, but it is on 'tuple'
-                    unique_stuff = series[key].transform(tuple).unique()
-                    if len(unique_stuff) == 1:
-                        scan[key] = unique_stuff[0]
+
+                    try:
+                        unique_stuff = series[key].transform(tuple).unique()
+                        if len(unique_stuff) == 1:
+                            scan[key] = unique_stuff[0]
+                    except ValueError:  # rare bug :  "ValueError: Function did not transform"
+                        pass  # in this case, just do nothing, no simplification
 
                 # remove nan
                 if (type(scan[key]) is np.float64 or type(scan[key]) is float) and np.isnan(scan[key]):
