@@ -69,17 +69,18 @@ def get_parser() -> argparse.ArgumentParser:
                           metavar='DIR',
                           required=False)
 
-    optional.add_argument("--connect",
-                          help="Use psycopg2.connect() to execute SQL 'INSERT' request (default)",
-                          dest="connect_or_prepare",
-                          action="store_const",
-                          const="connect")
-    optional.add_argument("--prepare",
-                          help="Do not connect and write all SQL 'INSERT' lines in an output file",
-                          dest="connect_or_prepare",
-                          action="store_const",
-                          const="prepare")
-    optional.set_defaults(connect_or_prepare="connect")
+    exclusive1 = optional.add_mutually_exclusive_group()
+    exclusive1.add_argument("--connect",
+                            help="Use psycopg2.connect() to execute SQL 'INSERT' request (default)",
+                            dest="connect_or_prepare",
+                            action="store_const",
+                            const="connect")
+    exclusive1.add_argument("--prepare",
+                            help="Do not connect and write all SQL 'INSERT' lines in an output file",
+                            dest="connect_or_prepare",
+                            action="store_const",
+                            const="prepare")
+    exclusive1.set_defaults(connect_or_prepare="connect")
 
     optional.add_argument("--config_file",
                           help=(
@@ -99,7 +100,7 @@ def get_parser() -> argparse.ArgumentParser:
 
     optional.add_argument("--credentials",
                           help=(
-                              "[nifti2database] will by default look for a credatial json files \n"
+                              "[nifti2database] will by default look for a credential json files \n"
                               "located here : ~/credentials_nifti2database.json \n"
                               "Otherwise, the user can provide it's path using this argument \n"
                               "The file should lool like this :  \n"
@@ -114,7 +115,7 @@ def get_parser() -> argparse.ArgumentParser:
                               '   ["sslmode": "disable"] \n'
                               '   ["gssencmode": "disable"] \n'
                               '} \n'
-                              "!!! fields in [brackets] are optional, it denpends on the server config \n"
+                              "!!! fields in [brackets] are optional, it depends on the server config \n"
                               "\n"
 
                           ),

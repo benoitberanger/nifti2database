@@ -2,7 +2,7 @@
 
 ## Usage
 ```
-usage: nifti2database [-h] -i DIR [DIR ...] [-o DIR] [--connect] [--prepare] [--config_file FILE] [--credentials FILE] [-v]
+usage: nifti2database [-h] -i DIR [DIR ...] [-o DIR] [--connect | --prepare] [--config_file FILE] [--credentials FILE] [-v]
 
     Parse nifti and json sidecare paramters and export them into a database for easy query.
     
@@ -24,7 +24,7 @@ Optional arguments:
                         Default location is ~/niix2bids_config_file/siemens.py
                         If default location is not present, try to use the template file 
                         located in [niix2bids]/config_file/siemens.py
-  --credentials FILE    [nifti2database] will by default look for a credatial json files 
+  --credentials FILE    [nifti2database] will by default look for a credential json files 
                         located here : ~/credentials_nifti2database.json 
                         Otherwise, the user can provide it's path using this argument 
                         The file should lool like this :  
@@ -39,11 +39,11 @@ Optional arguments:
                            ["sslmode": "disable"] 
                            ["gssencmode": "disable"] 
                         } 
-                        !!! fields in [brackets] are optional, it denpends on the server config 
+                        !!! fields in [brackets] are optional, it depends on the server config 
                         
   -v, --version         show program's version number and exit
 
-nifti2database version = 0.0.2
+nifti2database version = 2.0.0
 ```
 
 ## Installation
@@ -52,12 +52,12 @@ nifti2database version = 0.0.2
 
 #### Python version
 
-`python >= 3.9` Tested on `3.9`
+`python >= 3.10` Tested on `3.10`
 
 #### Package dependencies
 - `pandas` # for DataFrame
 - `nibabel` # to read nifti header
-- `psycopg2` # postgresql connection
+- `psycopg2-binary` # postgresql connection
 - `niix2bids` # decision tree of the nifti & json fields
 
 ## PostgreSQL
@@ -72,9 +72,8 @@ Use [conda](https://docs.conda.io/en/latest/miniconda.html) to create a new pyth
 **Standard**
 
 ```
-conda create --name nifti2database_python3.9
-conda activate nifti2database_python3.9
-conda install pip # to make sure to have a version in the env
+conda create --name nifti2database python=3.10
+conda activate nifti2database
 pip install git+https://github.com/benoitberanger/nifti2database
 ```
 
@@ -85,9 +84,8 @@ If you want to install in "developer" mode using the Git local repository, clone
 ```
 cd /path/to/mydir/
 git clone https://github.com/benoitberanger/nifti2database
-conda create --name nifti2database_python3.9
-conda activate nifti2database_python3.9
-conda install pip # to make sure to have a version in the env
+conda create --name nifti2database python=3.10
+conda activate nifti2database
 pip install -e nifti2database/
 ```
 
@@ -95,13 +93,8 @@ pip install -e nifti2database/
 #### **NOT** recommended installation procedure
 
 `pip install git+https://github.com/benoitberanger/nifti2database`  
-The installation might crash because of wrong dependencies' management. Check [Known issues](https://github.com/benoitberanger/nifti2database#known-issues) section.
+The installation might crash because of wrong dependency management.
 
 ## Known issues
 
-Weird things happened to me at installation due to outdated version of `setuptools`, a packages bundled with `pip`.  
-When I create a new python environment, I never had problem.
-
 `pip install nifti2database` is not possible yet. I did not register this packaged on https://pypi.org.
-
-
