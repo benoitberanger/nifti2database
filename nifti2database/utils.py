@@ -349,6 +349,11 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, schema: str, ta
 
         scan_clean['run'] = int(scan_clean['run'])
 
+        # try to convert back to int the np.flot64 : this is due to NaN management in DataFrame
+        for key in scan_clean.keys():
+            if type(scan_clean[key]) is np.float64 and scan_clean[key] == int(scan_clean[key]):
+                scan_clean[key] = int(scan_clean[key])
+
         # ==========================================================================================================
 
         dict_str = json.dumps(scan_clean)
