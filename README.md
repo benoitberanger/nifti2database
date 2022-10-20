@@ -98,3 +98,15 @@ The installation might crash because of wrong dependency management.
 ## Known issues
 
 `pip install nifti2database` is not possible yet. I did not register this packaged on https://pypi.org.
+
+
+# Perform SQL requests
+
+## Software
+https://dbeaver.io/  
+DBeaver can connect to a database, have a script editor to execute requests in 1 click and display the result
+
+## Demo
+
+[sample_request.sql]()
+
