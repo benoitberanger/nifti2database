@@ -110,3 +110,34 @@ DBeaver can connect to a database, have a script editor to execute requests in 1
 
 [sample_request.sql](sample_request.sql)
 
+Example :
+
+```
+-- count different resolution for mprage
+select distinct dict->'Resolution', count(*)  from xdat_search.nifti_json
+where dict->>'PulseSequenceName'='tfl' and jsonb_typeof(dict->'InversionTime')='number'
+group by dict->'Resolution' order by count desc;
+```
+
+|resolution|count|
+|----------|-----|
+|[1, 1, 1]|15827|
+|[1.2, 1.25, 1.25]|2013|
+|[1.1, 1.102, 1.102]|1473|
+|[0.8, 0.8, 0.8]|1276|
+|[1.1, 1.094, 1.094]|906|
+|[1.1, 1, 1]|717|
+|[1.2, 1.055, 1.055]|371|
+|[0.7, 0.7, 0.7]|346|
+|[0.9, 0.889, 0.889]|238|
+|[1.2, 1, 1]|226|
+|[1.2, 0.938, 0.938]|76|
+|[0.5, 0.5, 0.5]|73|
+|[0.6, 0.602, 0.602]|73|
+|[0.82, 0.82, 0.8]|72|
+|[1, 0.977, 0.977]|63|
+|[0.602, 0.602, 0.6]|23|
+|[0.802, 0.802, 0.8]|22|
+|[0.9, 0.898, 0.898]|19|
+|[0.9, 0.896, 0.896]|18|
+|[0.9, 0.903, 0.903]|18|
