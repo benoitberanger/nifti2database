@@ -108,5 +108,5 @@ DBeaver can connect to a database, have a script editor to execute requests in 1
 
 ## Demo
 
-[sample_request.sql]()
+[sample_request.sql](sample_request.sql)
 
