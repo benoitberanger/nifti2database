@@ -141,3 +141,6 @@ group by dict->'Resolution' order by count desc;
 |[0.9, 0.898, 0.898]|19|
 |[0.9, 0.896, 0.896]|18|
 |[0.9, 0.903, 0.903]|18|
+
+## Python script to send request
+[template_request.py](template_request.py)
