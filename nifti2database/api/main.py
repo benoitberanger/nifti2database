@@ -28,6 +28,14 @@ def get_help() -> str:
 
 @app.route('/nifti2database',methods=['POST'])
 def run():
-    req = flask.request.get_data()
-    print(req)
+    req_dict = flask.request.get_json()
+    print(req_dict)
+    req_list = []
+    for key, val in req_dict.items():
+        req_list.append(key)
+        req_list.append(val)
+    parser = nifti2database.cli.get_parser()
+    args = parser.parse_args(req_list)
+    print(args)
+    nifti2database.workflow.run(args=args, sysexit_when_finished=False)
     return json.dumps({'success':True}), 200, {'ContentType':'application/json'}

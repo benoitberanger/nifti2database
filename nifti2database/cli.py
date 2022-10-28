@@ -36,13 +36,14 @@ def get_parser() -> argparse.ArgumentParser:
     nifti2database_version = metadata.get_nifti2database_version()
 
     description = """
-    Parse nifti and json sidecare paramters and export them into a database for easy query.
+    Parse nifti and json sidecar parameters and export them into a database for easy query.
     """
 
     epilog = f"nifti2database version = {nifti2database_version}"
 
     # Parse command line arguments
-    parser = argparse.ArgumentParser(description=description,
+    parser = argparse.ArgumentParser(prog='nifti2database',
+                                     description=description,
                                      epilog=epilog,
                                      formatter_class=argparse.RawTextHelpFormatter)
 

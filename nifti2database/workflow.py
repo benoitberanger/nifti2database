@@ -12,10 +12,10 @@ import nifti2database
 
 
 ########################################################################################################################
-def run(args: argparse.Namespace) -> None:
+def run(args: argparse.Namespace, sysexit_when_finished: bool = True) -> None:
 
-    #-------------------------------------------------------------------------------------------------------------------
-    # from here, this a basicly a copy-paste of niix2bids.workflow.run()
+    # ------------------------------------------------------------------------------------------------------------------
+    # from here, this a basically a copy-paste of niix2bids.workflow.run()
 
     star_time = time.time()
 
@@ -77,7 +77,7 @@ def run(args: argparse.Namespace) -> None:
     df = niix2bids.decision_tree.siemens.run(volume_list, config)
 
     # to here
-    #-------------------------------------------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------------------------------------
 
     # logs from niix2bids.utils.apply_bids_architecture
     nifti2database.utils.display_logs_from_decision_tree(volume_list)
@@ -85,13 +85,13 @@ def run(args: argparse.Namespace) -> None:
     # read all nifti headers
     df = nifti2database.utils.read_all_nifti_header(df)
 
-    # conctenate the bidsfields with the jsondict (seqparam)
+    # concatenate the bidsfields with the jsondict (seqparam)
     df = nifti2database.utils.concat_bidsfields_to_seqparam(df)
 
     # ok here is the most important part : regroup volumes by scan
     scans = nifti2database.utils.build_scan_from_series(df, config)
 
-    # duplicate happen during dev, but should not happen for prodution
+    # duplicate happen during dev, but should not happen for production
     # anyway, check it and log it
     scans = nifti2database.utils.remove_duplicate(scans)
 
@@ -109,4 +109,9 @@ def run(args: argparse.Namespace) -> None:
     log.info(f'Total execution time is : {stop_time-star_time:.3f}s')
 
     # THE END
-    sys.exit(0)
+    if sysexit_when_finished:
+        sys.exit(0)
+    else:
+        # we need to remove nifti2database logging handler before exiting the workflow
+        import logging
+        logging.getLogger().removeHandler(logging.getLogger().handlers[0])
