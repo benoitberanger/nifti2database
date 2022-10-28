@@ -3,6 +3,7 @@ import argparse  # just for function signature
 import os        # for path management
 import sys       # to stop script execution on case of error
 import time      # to time execution of code
+import logging   # to access the log report
 
 # dependency modules
 import niix2bids.utils
@@ -12,7 +13,7 @@ import nifti2database
 
 
 ########################################################################################################################
-def run(args: argparse.Namespace, sysexit_when_finished: bool = True) -> None:
+def run(args: argparse.Namespace, sysexit: bool = True) -> str:
 
     # ------------------------------------------------------------------------------------------------------------------
     # from here, this a basically a copy-paste of niix2bids.workflow.run()
@@ -23,8 +24,6 @@ def run(args: argparse.Namespace, sysexit_when_finished: bool = True) -> None:
     if args.out_dir and not os.path.exists(args.out_dir):
         os.mkdir(args.out_dir)
 
-    # initialize logger (console & file)
-    niix2bids.utils.init_logger(args.out_dir is not None, args.out_dir)
     log = niix2bids.utils.get_logger()
     log.info(f"nifti2database=={nifti2database.metadata.get_nifti2database_version()}")
 
@@ -38,13 +37,19 @@ def run(args: argparse.Namespace, sysexit_when_finished: bool = True) -> None:
 
     if args.connect_or_prepare == 'prepare' and args.out_dir is None:
         log.error(f"if '--prepare' is used , '--out_dir' has to be defined too")
-        sys.exit(1)
+        if sysexit:
+            sys.exit(1)
+        else:
+            return nifti2database.utils.get_report()
 
     # check for credentials file
     if args.connect_or_prepare == "connect":
         if not os.path.exists(args.credentials):
             log.error(f"credentials file does not exist : {args.credentials}")
-            sys.exit(1)
+            if sysexit:
+                sys.exit(1)
+            else:
+                return nifti2database.utils.get_report()
         else:
             log.info(f"credentials : {args.credentials}")
 
@@ -52,7 +57,10 @@ def run(args: argparse.Namespace, sysexit_when_finished: bool = True) -> None:
     for one_dir in args.in_dir:
         if not os.path.exists(one_dir):
             log.error(f"in_dir does not exist : {one_dir}")
-            sys.exit(1)
+            if sysexit:
+                sys.exit(1)
+            else:
+                return nifti2database.utils.get_report()
 
     # load config file
     config = niix2bids.utils.load_config_file(args.config_file)
@@ -109,9 +117,7 @@ def run(args: argparse.Namespace, sysexit_when_finished: bool = True) -> None:
     log.info(f'Total execution time is : {stop_time-star_time:.3f}s')
 
     # THE END
-    if sysexit_when_finished:
+    if sysexit:
         sys.exit(0)
     else:
-        # we need to remove nifti2database logging handler before exiting the workflow
-        import logging
-        logging.getLogger().removeHandler(logging.getLogger().handlers[0])
+        return nifti2database.utils.get_report()

@@ -106,7 +106,7 @@ def read_all_nifti_header(df: pandas.DataFrame) -> pandas.DataFrame:
 
 
 ########################################################################################################################
-@logit("Concatenante BIDSfields from niix2bids to the json dict", level=logging.INFO)
+@logit("Concatenate BIDSfields from niix2bids to the json dict", level=logging.INFO)
 def concat_bidsfields_to_seqparam(df: pandas.DataFrame) -> pandas.DataFrame:
     
     for row in df.index:
@@ -384,7 +384,7 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, schema: str, ta
         cur.close()
         con.close()
 
-    log.info("Connection to dabase closed")
+    log.info("Connection to database closed")
 
     return insert_list
 
@@ -408,3 +408,13 @@ def write_insert_list(logfile: str, insert_list: list[str]) -> None:
     # write
     with open(insert_fullpath , mode='wt', encoding='utf-8' ) as fp:
         fp.write('\n'.join(insert_list))
+
+
+########################################################################################################################
+def get_report() -> str:
+    for handler in logging.getLogger().handlers:
+        if handler.get_name() == 'niix2bids_report':
+            report = handler.stream.getvalue()
+            handler.stream.truncate(0)
+            handler.stream.seek(0)
+            return report

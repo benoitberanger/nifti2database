@@ -142,5 +142,8 @@ def main() -> None:
     args = parser.parse_args()  # Parse
     args = format_args(args)    # Format args
 
+    # initialize logger (console & file)
+    niix2bids.utils.init_logger(args.out_dir is not None, args.out_dir)
+
     # Call workflow
     nifti2database.workflow.run(args)
