@@ -92,9 +92,20 @@ def run():
 
     info = {
         'success': success,
+        'complete': complete,
         'input_request_dict': req_dict,
         'input_args_list': args_list,
         'args': vars(args),
         'report': report,
     }
     return json.dumps(info), 200, {'ContentType': 'application/json'}
+
+
+if __name__ == "__main__":
+    # options bellow are useful for debugging
+    # but on production, options are set by the caller, such as the docker container
+    app.run(debug=True,
+            host='0.0.0.0',
+            use_debugger=True,
+            use_reloader=True,
+            )
