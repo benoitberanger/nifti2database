@@ -161,7 +161,7 @@ In the `args` field, just use the same arguments as the CLI. Such as :
 ```
 
 ### is it running ?
-`GET` request at the root `https://ipaddress:port/` will send a back a message : `API is running`
+`GET` request at the root `https://ipaddress:port/` will send a back a message : `API is running`  
 `GET` request at  `https://ipaddress:port/help` will send back the help of the CLI
 
 ## Docker
