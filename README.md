@@ -43,7 +43,7 @@ Optional arguments:
                         
   -v, --version         show program's version number and exit
 
-nifti2database version = 2.0.0
+nifti2database version = 3.0.0
 ```
 
 ## Installation
