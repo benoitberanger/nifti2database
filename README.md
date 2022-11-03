@@ -153,7 +153,7 @@ group by dict->'Resolution' order by count desc;
 
 ### Syntax
 `POST` with :
-- address : `https://ipaddress:port/nifti2database`
+- address : `http://ipaddress:port/nifti2database`
 - header : `Content-Type: application/json` to say it's JSON
 - data : _see just bellow_
 
@@ -166,8 +166,8 @@ In the `args` field, just use the same arguments as the CLI. Such as :
 ```
 
 ### is it running ?
-`GET` request at the root `https://ipaddress:port/` will send a back a message : `API is running`  
-`GET` request at  `https://ipaddress:port/help` will send back the help of the CLI
+`GET` request at the root `http://ipaddress:port/` will send a back a message : `API is running`  
+`GET` request at  `http://ipaddress:port/help` will send back the help of the CLI
 
 ## Docker
 [Docker](https://docs.docker.com/) is used as container
