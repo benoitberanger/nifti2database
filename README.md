@@ -152,6 +152,11 @@ group by dict->'Resolution' order by count desc;
 [Flask](https://flask.palletsprojects.com/) is used to build an API using HTTP
 
 ### Syntax
+`POST` with :
+- address : `https://ipaddress:port/nifti2database`
+- header : `Content-Type: application/json` to say it's JSON
+- data : _see just bellow_
+
 ```json
 {"args":"<same args as the CLI>"}
 ```
