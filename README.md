@@ -59,6 +59,7 @@ nifti2database version = 2.0.0
 - `nibabel` # to read nifti header
 - `psycopg2-binary` # postgresql connection
 - `niix2bids` # decision tree of the nifti & json fields
+- `Flask` # for API using HTTP
 
 ## PostgreSQL
 Some notes/commands for initialization of the test database, schema and table are in [db_scripts](db_scripts)
@@ -71,7 +72,7 @@ Use [conda](https://docs.conda.io/en/latest/miniconda.html) to create a new pyth
 
 **Standard**
 
-```
+```shell
 conda create --name nifti2database python=3.10
 conda activate nifti2database
 pip install git+https://github.com/benoitberanger/nifti2database
@@ -81,7 +82,7 @@ pip install git+https://github.com/benoitberanger/nifti2database
 
 If you want to install in "developer" mode using the Git local repository, clone the repo before, then change the installation line :
 
-```
+```shell
 cd /path/to/mydir/
 git clone https://github.com/benoitberanger/nifti2database
 conda create --name nifti2database python=3.10
@@ -112,7 +113,7 @@ DBeaver can connect to a database, have a script editor to execute requests in 1
 
 Example :
 
-```
+```pgsql
 -- count different resolution for mprage
 select distinct dict->'Resolution', count(*)  from xdat_search.nifti_json
 where dict->>'PulseSequenceName'='tfl' and jsonb_typeof(dict->'InversionTime')='number'
@@ -144,3 +145,38 @@ group by dict->'Resolution' order by count desc;
 
 ## Python script to send request
 [template_request.py](template_request.py)
+
+# API
+
+## Flask
+[Flask](https://flask.palletsprojects.com/) is used to build an API using HTTP
+
+### Syntax
+```json
+{"args":"<same args as the CLI>"}
+```
+In the `args` field, just use the same arguments as the CLI. Such as :
+```json
+{"args":"-i /path/to/data --credentials /path/to/credentials.json"}
+```
+
+### is it running ?
+`GET` request at the root `https://ipaddress:port/` will send a back a message : `API is running`
+`GET` request at  `https://ipaddress:port/help` will send back the help of the CLI
+
+## Docker
+[Docker](https://docs.docker.com/) is used as container
+
+### Build
+```bash
+docker build -f Dockerfile -t nifti2database .
+```
+
+### Run
+**!!! incomplete command !!!** :
+```bash
+docker run -p 5000:5000 nifti2database
+```
+The command misses mounting points :
+- to the credential JSON file
+- to the data directory
