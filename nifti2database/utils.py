@@ -140,7 +140,7 @@ def build_scan_from_series(df: pandas.DataFrame, config: list) -> list[dict]:
         columns = ['PatientName', 'ProtocolName', 'run', 'MRAcquisitionType', 'StudyInstanceUID', 'PhaseEncodingDirection']
         # 'MRAcquisitionType' is can help sometimes for grouping
 
-        groups = seqinfo.groupby(columns)
+        groups = seqinfo.groupby(by=columns, dropna=False)
 
         for _, series in groups:
 
