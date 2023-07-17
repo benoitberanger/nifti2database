@@ -347,7 +347,10 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, schema: str, ta
         scan_clean['Resolution'] = int_or_round3(scan_clean['Resolution'])
         scan_clean['FoV'       ] = int_or_round3(scan_clean['FoV'       ])
 
-        scan_clean['run'] = int(scan_clean['run'])
+        if 'run' not in scan_clean.keys():
+            scan_clean['run'] = np.nan
+        else:
+            scan_clean['run'] = int(scan_clean['run'])
 
         # try to convert back to int the np.flot64 : this is due to NaN management in DataFrame
         for key in scan_clean.keys():
