@@ -143,7 +143,6 @@ def build_scan_from_series(df: pandas.DataFrame, config: list) -> list[dict]:
         # 'MRAcquisitionType' is can help sometimes for grouping
 
         groups = seqinfo.groupby(by=columns, dropna=False)
-
         for _, series in groups:
 
             scan = series.to_dict('list')  # convert the DataFrame to standard dict
@@ -358,6 +357,11 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, schema: str, ta
         for key in scan_clean.keys():
             if type(scan_clean[key]) is np.float64 and scan_clean[key] == int(scan_clean[key]):
                 scan_clean[key] = int(scan_clean[key])
+
+        # convert numpy.bool_ to builtin bool
+        for key in scan_clean.keys():
+            if type(scan_clean[key]) is np.bool_:
+                scan_clean[key] = bool(scan_clean[key])
 
         # ==========================================================================================================
 
