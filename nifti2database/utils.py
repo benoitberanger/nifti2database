@@ -137,7 +137,9 @@ def build_scan_from_series(df: pandas.DataFrame, config: list) -> list[dict]:
         if seqinfo.empty: continue  # just to run the code faster
 
         # we group using raw json info and the "run" number from the bids decision tree in niix2bids
-        columns = ['PatientName', 'ProtocolName', 'run', 'MRAcquisitionType', 'StudyInstanceUID', 'PhaseEncodingDirection']
+        columns = ['PatientName', 'ProtocolName', 'run', 'MRAcquisitionType', 'StudyInstanceUID']
+        if 'PhaseEncodingDirection' in seqinfo:
+            columns.append('PhaseEncodingDirection')
         # 'MRAcquisitionType' is can help sometimes for grouping
 
         groups = seqinfo.groupby(by=columns, dropna=False)
