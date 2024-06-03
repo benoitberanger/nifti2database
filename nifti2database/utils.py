@@ -315,7 +315,7 @@ def insert_scan_to_database(con: psycopg2.extensions.connection, schema: str, ta
 
         # this function will 'apply int_or_round3__scalar' on each element or sub-element
         def int_or_round3(input):
-            if type(input) == np.float64:  # this is a scalar
+            if type(input) == np.float64 or type(input) == np.float32:  # this is a scalar
                 return int_or_round3__scalar(input)
             else:  # tuple ? list[tuple] ?
                 output_list = []
